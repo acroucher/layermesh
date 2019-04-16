@@ -13,8 +13,8 @@ You should have received a copy of the GNU Lesser General Public License along w
 from __future__ import print_function
 import numpy as np
 
-class layermesh(object):
+class mesh(object):
     """Layered computational mesh."""
 
-    def __init__(self):
-        pass
+    def __init__(self, filename = None, columns = None, layers = None):
+        
