@@ -82,6 +82,10 @@ class mesh(object):
         return len(self.column)
     num_columns = property(get_num_columns)
 
+    def get_num_layers(self):
+        return len(self.layer)
+    num_layers = property(get_num_layers)
+
     def add_node(self, n):
         """Adds horizontal node to mesh."""
         self.node.append(n)
