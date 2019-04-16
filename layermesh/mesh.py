@@ -74,6 +74,14 @@ class mesh(object):
         if layers is not None:
             self.set_layers(layers)
 
+    def get_num_nodes(self):
+        return len(self.node)
+    num_nodes = property(get_num_nodes)
+
+    def get_num_columns(self):
+        return len(self.column)
+    num_columns = property(get_num_columns)
+
     def add_node(self, n):
         """Adds horizontal node to mesh."""
         self.node.append(n)
