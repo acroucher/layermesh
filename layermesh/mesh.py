@@ -58,6 +58,11 @@ class layer(object):
     def __repr__(self):
         return str(self.bottom) + ': ' + str(self.top)
 
+    def get_centre(self):
+        """Returns layer centre."""
+        return 0.5 * (self.bottom + self.top)
+    centre = property(get_centre)
+
 class mesh(object):
     """Layered computational mesh."""
 
