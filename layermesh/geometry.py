@@ -170,7 +170,7 @@ def polygon_boundary(this, other, polygon):
                 if dist < dmin:
                     dmin = dist
                     v = bdy + ref
-        except LinAlgError: continue
+        except np.linalg.LinAlgError: continue
     return v
 
 def line_projection(a, line, return_xi = False):
