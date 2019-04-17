@@ -67,7 +67,8 @@ class layer(object):
 class mesh(object):
     """Layered computational mesh."""
 
-    def __init__(self, filename = None, columns = None, layers = None):
+    def __init__(self, filename = None, columns = None, layers = None,
+                 surface = None):
         """Initialize layered mesh either from file or specified columns and
         layers."""
 
@@ -79,6 +80,10 @@ class mesh(object):
 
         if layers is not None:
             self.set_layers(layers)
+
+        if surface is not None:
+            if isinstance(surface, (dict, list, np.array)):
+                self.set_column_surfaces()
 
         self.setup()
 
@@ -172,6 +177,18 @@ class mesh(object):
         """Returns true if column is in the layer with specified index, or
         false otherwise."""
         return col.num_layers >= self.num_layers - ilayer
+
+    def set_column_surfaces(self, surface):
+        """Sets column surface properties from surface dictionary (keyed by
+        column indices) or list/array of values for all columns."""
+
+        if isinstance(surface, dict):
+            for icol, s in dict.items():
+                self.column[icol].surface = s
+        elif isinstance(surface, (list, np.array)) and \
+             len(surface) == self.num_columns:
+            for col, s in zip(self.column, surface):
+                col.surface = s
 
     def get_meshio_points_cells(self):
         """Returns lists of 3-D points and cells suitable for mesh
