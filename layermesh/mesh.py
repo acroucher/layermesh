@@ -158,8 +158,9 @@ class mesh(object):
                     j * nv0 + i + 1]
                 column_nodes = [self.node[ind]
                                 for ind in column_node_indices]
-                col = column(node = column_nodes)
+                col = column(node = column_nodes, index = index)
                 self.add_column(col)
+                index += 1
 
     def set_layers(self, spacings):
         """Sets mesh layers according to specified vertical layer spacings,
