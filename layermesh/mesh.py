@@ -138,10 +138,11 @@ class mesh(object):
                  for s in spacings]
         nv0 = len(verts[0])
         ns = [len(s) for s in spacings]
+        index = 0
         for y in verts[1]:
             for x in verts[0]:
-                n = node(pos = np.array([x, y]))
-                self.add_node(n)
+                n = node(pos = np.array([x, y]), index = index)
+                self.add_node(n); index += 1
         for j in range(ns[1]):
             for i in range(ns[0]):
                 column_node_indices = [
