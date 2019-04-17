@@ -26,8 +26,9 @@ class node(object):
 class column(object):
     """Mesh column."""
 
-    def __init__(self, node, surface = None):
+    def __init__(self, node, index = None, surface = None):
         self.node = node
+        self.index = index
         self.surface = surface
         if self.num_nodes > 0:
             self.centre = self.centroid
@@ -82,8 +83,8 @@ class mesh(object):
             self.set_layers(layers)
 
         if surface is not None:
-            if isinstance(surface, (dict, list, np.array)):
-                self.set_column_surfaces()
+            if isinstance(surface, (dict, list, np.ndarray)):
+                self.set_column_surfaces(surface)
 
         self.setup()
 
@@ -183,12 +184,16 @@ class mesh(object):
         column indices) or list/array of values for all columns."""
 
         if isinstance(surface, dict):
-            for icol, s in dict.items():
+            for icol, s in surface.items():
                 self.column[icol].surface = s
-        elif isinstance(surface, (list, np.array)) and \
-             len(surface) == self.num_columns:
-            for col, s in zip(self.column, surface):
-                col.surface = s
+        elif isinstance(surface, (list, np.ndarray)):
+             if len(surface) == self.num_columns:
+                 for col, s in zip(self.column, surface):
+                     col.surface = s
+             else:
+                 raise Exception('Surface list or array is the wrong size.')
+        else:
+            raise Exception('Unrecognized surface parameter type.')
 
     def get_meshio_points_cells(self):
         """Returns lists of 3-D points and cells suitable for mesh
