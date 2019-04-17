@@ -133,6 +133,17 @@ class mesh(object):
             self.set_column_num_layers(col)
         for ilayer, lay in enumerate(self.layer):
             self.set_layer_columns(ilayer, lay)
+        self.layer_column_indices = []
+        for ilayer, lay in enumerate(self.layer):
+            for ilaycol, col in enumerate(lay.column):
+                self.layer_column_indices.append((ilayer, col.index))
+        self.cell_index = dict([(v, k) for k, v in
+                                enumerate(self.layer_column_indices)])
+
+    def get_num_cells(self):
+        """Returns number of 3-D cells in mesh."""
+        return len(self.layer_column_indices)
+    num_cells = property(get_num_cells)
 
     def set_rectangular_columns(self, spacings):
         """Sets rectangular mesh columns according to specified horizontal
@@ -149,6 +160,7 @@ class mesh(object):
             for x in verts[0]:
                 n = node(pos = np.array([x, y]), index = index)
                 self.add_node(n); index += 1
+        index = 0
         for j in range(ns[1]):
             for i in range(ns[0]):
                 column_node_indices = [
