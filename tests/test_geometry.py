@@ -149,7 +149,7 @@ class geometryTestCase(unittest.TestCase):
         ]
         s = geometry.simplify_polygon(poly)
         self.assertEqual(6, len(s))
-        
+
     def test_polygon_boundary(self):
         """polygon_boundary()"""
         tol = 1.e-6

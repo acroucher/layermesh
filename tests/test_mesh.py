@@ -30,7 +30,7 @@ class meshTestCase(unittest.TestCase):
             self.assertEqual(lay.centre, centre)
 
     def test_meshio_points_cells(self):
-        
+
         dx = [10.]*3; dy = [12.] * 3
         dz = [1., 2., 3.]
         m = mesh(columns = [dx, dy], layers = dz)
@@ -46,11 +46,11 @@ class meshTestCase(unittest.TestCase):
                          [16, 20, 21, 17, 0, 4, 5, 1])
         self.assertEqual(list(cells['hexahedron'][-1]),
                          [58, 62, 63, 59, 42, 46, 47, 43])
-        
+
 
 if __name__ == '__main__':
 
     suite = unittest.TestLoader().loadTestsFromTestCase(meshTestCase)
     unittest.TextTestRunner(verbosity = 1).run(suite)
-    
+
 
