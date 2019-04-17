@@ -167,3 +167,8 @@ class mesh(object):
             bottom = z
             lay = layer(bottom, top)
             self.add_layer(lay)
+
+    def column_in_layer(self, col, ilayer):
+        """Returns true if column is in the layer with specified index, or
+        false otherwise."""
+        return col.num_layers >= self.num_layers - ilayer
