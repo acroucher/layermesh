@@ -80,6 +80,8 @@ class mesh(object):
         if layers is not None:
             self.set_layers(layers)
 
+        self.setup()
+
     def get_num_nodes(self):
         return len(self.node)
     num_nodes = property(get_num_nodes)
@@ -105,6 +107,13 @@ class mesh(object):
         self.column.append(col)
         for n in col.node:
             n.column.add(col)
+
+    def setup(self):
+        """Sets up internal mesh variables."""
+        for col in self.column:
+            self.set_column_num_layers(col)
+        for ilayer, lay in enumerate(self.layer):
+            self.set_layer_columns(ilayer, lay)
 
     def set_rectangular_columns(self, spacings):
         """Sets rectangular mesh columns according to specified horizontal
