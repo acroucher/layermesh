@@ -213,32 +213,26 @@ class mesh(object):
         input/output using meshio library."""
 
         points = []
-        node_index = {}
-        index = 0
-        # surface nodes:
-        ilayer = -1
-        for inode, n in enumerate(self.node):
-            if any([col.num_layers == self.num_layers for col in n.column]):
-                pos = np.concatenate((n.pos, np.array([self.layer[0].top])))
-                points.append(pos)
-                node_index[ilayer, inode] = index
-                index += 1
-        # subsurface nodes and cells:
         cells = {'wedge': [], 'hexahedron': []}
         cell_type = {6: 'wedge', 8: 'hexahedron'}
+        node_index = {}
+        point_index = 0
+
         for ilayer, lay in enumerate(self.layer):
-            for inode, n in enumerate(self.node):
-                if any([self.column_in_layer(col, ilayer) for col in n.column]):
-                    pos = np.concatenate((n.pos, np.array([lay.bottom])))
-                    points.append(pos)
-                    node_index[ilayer, inode] = index
-                    index += 1
             for col in lay.column:
                 elt = []
-                for i in [ilayer, ilayer - 1]:
+                for i in [ilayer - 1, ilayer]:
                     for n in col.node:
-                        elt.append(node_index[i, n.index])
+                        k = (i, n.index)
+                        if k not in node_index: # create point:
+                            z = self.layer[i].bottom if i >= 0 else self.layer[0].top
+                            pos = np.concatenate((n.pos, np.array([z])))
+                            points.append(pos)
+                            node_index[k] = point_index
+                            point_index += 1
+                        elt.append(node_index[k])
                 cells[cell_type[len(elt)]].append(elt)
+
         points = np.array(points)
         cells = dict([(k, np.array(v)) for k, v in cells.items() if v])
         return points, cells
