@@ -172,3 +172,41 @@ class mesh(object):
         """Returns true if column is in the layer with specified index, or
         false otherwise."""
         return col.num_layers >= self.num_layers - ilayer
+
+    def get_meshio_points_cells(self):
+        """Returns lists of 3-D points and cells suitable for mesh
+        input/output using meshio library."""
+
+        points = []
+        node_index = {}
+        index = 0
+        # surface nodes:
+        ilayer = -1
+        for inode, n in enumerate(self.node):
+            if any([col.num_layers == self.num_layers for col in n.column]):
+                pos = np.concatenate((n.pos, np.array([self.layer[0].top])))
+                points.append(pos)
+                node_index[ilayer, inode] = index
+                index += 1
+        # subsurface nodes and cells:
+        cells = {'wedge': [], 'hexahedron': []}
+        cell_type = {6: 'wedge', 8: 'hexahedron'}
+        for ilayer, lay in enumerate(self.layer):
+            for inode, n in enumerate(self.node):
+                if any([self.column_in_layer(col, ilayer) for col in n.column]):
+                    pos = np.concatenate((n.pos, np.array([lay.bottom])))
+                    points.append(pos)
+                    node_index[ilayer, inode] = index
+                    index += 1
+            for col in lay.column:
+                elt = []
+                for i in [ilayer, ilayer - 1]:
+                    for n in col.node:
+                        elt.append(node_index[i, n.index])
+                cells[cell_type[len(elt)]].append(elt)
+        points = np.array(points)
+        cells = dict([(k, np.array(v)) for k, v in cells.items() if v])
+        return points, cells
+
+    meshio_points_cells = property(get_meshio_points_cells)
+
