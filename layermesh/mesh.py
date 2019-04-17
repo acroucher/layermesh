@@ -113,6 +113,14 @@ class mesh(object):
         mesh layer structure."""
         s = col.surface if col.surface is not None else self.layer[0].top
         col.num_layers = len([lay for lay in self.layer if s >= lay.centre])
+
+    def set_layer_columns(self, ilayer, lay):
+        """Populates list of columns for given layer."""
+        lay.column = []
+        for col in self.column:
+            if self.column_in_layer(col, ilayer):
+                lay.column.append(col)
+
     def setup(self):
         """Sets up internal mesh variables."""
         for col in self.column:
