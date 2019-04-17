@@ -15,8 +15,9 @@ import numpy as np
 class node(object):
     """2-D mesh node."""
 
-    def __init__(self, pos):
+    def __init__(self, pos, index = None):
         self.pos = pos
+        self.index = index
         self.column = set()
 
     def __repr__(self):
