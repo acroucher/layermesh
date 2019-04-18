@@ -48,6 +48,9 @@ class column(object):
     def get_num_layers(self): return len(self.layer)
     num_layers = property(get_num_layers)
 
+    def get_num_cells(self): return len(self.cell)
+    num_cells = property(get_num_cells)
+
     def get_polygon(self):
         """Returns polygon formed by column node positions."""
         return [node.pos for node in self.node]
