@@ -106,6 +106,17 @@ class layer(object):
         return self.top - self.bottom
     thickness = property(get_thickness)
 
+    @memoize
+    def get_area(self):
+        """Returns area of layer."""
+        return sum([col.area for col in self.column])
+    area = property(get_area)
+
+    def get_volume(self):
+        """Returns volume of layer."""
+        return self.area * self.thickness
+    volume = property(get_volume)
+
 class cell(object):
     """Mesh cell."""
 

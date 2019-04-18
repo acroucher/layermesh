@@ -69,6 +69,10 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(m.volume, 5760)
         self.assertEqual([c.index for c in m.surface_cells],
                          [0, 4, 5, 1, 7, 8, 2, 10, 11])
+        self.assertEqual([lay.area for lay in m.layer],
+                         [360, 1080, 1080])
+        self.assertEqual([lay.volume for lay in m.layer],
+                         [360, 2160, 3240])
 
     def test_meshio_points_cells(self):
 
