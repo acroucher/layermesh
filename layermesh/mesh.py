@@ -97,6 +97,31 @@ class layer(object):
         return self.top - self.bottom
     thickness = property(get_thickness)
 
+class cell(object):
+    """Mesh cell."""
+
+    def __init__(self, lay, col, index = None):
+        self.layer = lay
+        self.column = col
+        self.index = index
+
+    def __repr__(self):
+        return str(self.index)
+
+    @memoize
+    def get_volume(self):
+        """Returns cell volume."""
+        return self.layer.thickness * self.column.area
+    volume = property(get_volume)
+
+    @memoize
+    def get_centroid(self):
+        """Returns cell centroid."""
+        return np.concatenate([self.column.centroid,
+                               np.array([self.layer.centre])])
+    centroid = property(get_centroid)
+    centre = property(get_centroid)
+
 class mesh(object):
     """Layered computational mesh."""
 
