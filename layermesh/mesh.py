@@ -12,14 +12,6 @@ You should have received a copy of the GNU Lesser General Public License along w
 
 import numpy as np
 
-def memoize(f):
-    """Decorator for caching function values."""
-    memo = {}
-    def check(x):
-        if x not in memo: memo[x] = f(x)
-        return memo[x]
-    return check
-
 class node(object):
     """2-D mesh node."""
 
@@ -56,7 +48,6 @@ class column(object):
         return [node.pos for node in self.node]
     polygon = property(get_polygon)
 
-    @memoize
     def get_centroid(self):
         """Returns column centroid."""
         from geometry import polygon_centroid
@@ -64,14 +55,12 @@ class column(object):
     centroid = property(get_centroid)
     centre = property(get_centroid)
 
-    @memoize
     def get_area(self):
         """Returns column area."""
         from geometry import polygon_area
         return polygon_area(self.polygon)
     area = property(get_area)
 
-    @memoize
     def get_volume(self):
         """Returns column volume."""
         return self.area * sum([lay.thickness for lay in self.layer])
@@ -103,19 +92,16 @@ class layer(object):
     def get_num_cells(self): return len(self.cell)
     num_cells = property(get_num_cells)
 
-    @memoize
     def get_centre(self):
         """Returns layer centre."""
         return 0.5 * (self.bottom + self.top)
     centre = property(get_centre)
 
-    @memoize
     def get_thickness(self):
         """Returns layer thickness."""
         return self.top - self.bottom
     thickness = property(get_thickness)
 
-    @memoize
     def get_area(self):
         """Returns area of layer."""
         return sum([col.area for col in self.column])
@@ -142,13 +128,11 @@ class cell(object):
     def __repr__(self):
         return str(self.index)
 
-    @memoize
     def get_volume(self):
         """Returns cell volume."""
         return self.layer.thickness * self.column.area
     volume = property(get_volume)
 
-    @memoize
     def get_centroid(self):
         """Returns cell centroid."""
         return np.concatenate([self.column.centroid,
@@ -355,3 +339,7 @@ class mesh(object):
         """Returns cells at mesh surface."""
         return [col.cell[0] for col in self.column]
     surface_cells = property(get_surface_cells)
+
+    # def translate(self, shift):
+    #     """Translates mesh by specified 3-D shift vector."""
+        
