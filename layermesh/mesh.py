@@ -88,6 +88,9 @@ class layer(object):
     def __repr__(self):
         return str(self.index)
 
+    def get_num_columns(self): return len(self.column)
+    num_columns = property(get_num_columns)
+
     @memoize
     def get_centre(self):
         """Returns layer centre."""
