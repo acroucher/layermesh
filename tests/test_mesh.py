@@ -29,6 +29,11 @@ class meshTestCase(unittest.TestCase):
         layer_centres = [-0.5, -2, -4.5]
         for lay, centre in zip(m.layer, layer_centres):
             self.assertEqual(lay.centre, centre)
+        area = 120.
+        self.assertTrue(all([col.area == area for col in m.column]))
+        vol = 120. * 6
+        self.assertTrue(all([col.volume == vol for col in m.column]))
+        self.assertEqual(m.volume, 6480)
 
     def test_surface(self):
 
