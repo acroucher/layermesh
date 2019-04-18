@@ -121,14 +121,17 @@ class mesh(object):
         self.setup()
 
     def get_num_nodes(self):
+        """Returns number of 2-D nodes in mesh."""
         return len(self.node)
     num_nodes = property(get_num_nodes)
 
     def get_num_columns(self):
+        """Returns number of columns in mesh."""
         return len(self.column)
     num_columns = property(get_num_columns)
 
     def get_num_layers(self):
+        """Returns number of layers in mesh."""
         return len(self.layer)
     num_layers = property(get_num_layers)
 
