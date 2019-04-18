@@ -91,6 +91,12 @@ class layer(object):
         return 0.5 * (self.bottom + self.top)
     centre = property(get_centre)
 
+    @memoize
+    def get_thickness(self):
+        """Returns layer thickness."""
+        return self.top - self.bottom
+    thickness = property(get_thickness)
+
 class mesh(object):
     """Layered computational mesh."""
 
