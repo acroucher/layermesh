@@ -74,6 +74,23 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual([lay.volume for lay in m.layer],
                          [360, 2160, 3240])
 
+    def test_polygons(self):
+
+        dx = [10, 20, 30]; dy = [20, 15, 10]
+        dz = [5, 10, 15]
+        surface = [0.2, -9, -18] * 3
+        m = mesh(columns = [dx, dy], layers = dz, surface = surface)
+        self.assertEqual(m.num_cells, 18)
+        self.assertEqual(m.volume, 56250)
+        poly = [np.array([8, -5]), np.array([11, 40]),
+                np.array([20, 35]), np.array([40, 10]), np.array([20, -5])]
+        cells = m.layer[-1].cells_in_polygon(poly)
+        self.assertEqual([c.index for c in cells], [10, 13])
+        cells = m.layer[1].cells_in_polygon(poly)
+        self.assertEqual([c.index for c in cells], [4, 6])
+        cells = m.layer[0].cells_in_polygon(poly)
+        self.assertEqual(cells, [])
+
     def test_meshio_points_cells(self):
 
         dx = [10.]*3; dy = [12.] * 3
