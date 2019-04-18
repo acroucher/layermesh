@@ -40,7 +40,7 @@ class column(object):
         self.surface = surface
 
     def __repr__(self):
-        return str(self.node)
+        return str(self.index)
 
     def get_num_nodes(self): return len(self.node)
     num_nodes = property(get_num_nodes)
