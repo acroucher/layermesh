@@ -38,8 +38,6 @@ class column(object):
         self.node = node
         self.index = index
         self.surface = surface
-        if self.num_nodes > 0:
-            self.centre = self.centroid
 
     def __repr__(self):
         return str(self.node)
@@ -52,11 +50,20 @@ class column(object):
         return [node.pos for node in self.node]
     polygon = property(get_polygon)
 
+    @memoize
     def get_centroid(self):
         """Returns column centroid."""
         from geometry import polygon_centroid
         return polygon_centroid(self.polygon)
     centroid = property(get_centroid)
+    centre = property(get_centroid)
+
+    @memoize
+    def get_area(self):
+        """Returns column area."""
+        from geometry import polygon_area
+        return polygon_area(self.polygon)
+    area = property(get_area)
 
 class layer(object):
     """Mesh layer."""
@@ -68,6 +75,7 @@ class layer(object):
     def __repr__(self):
         return str(self.bottom) + ': ' + str(self.top)
 
+    @memoize
     def get_centre(self):
         """Returns layer centre."""
         return 0.5 * (self.bottom + self.top)
