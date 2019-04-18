@@ -126,6 +126,11 @@ class layer(object):
         return self.area * self.thickness
     volume = property(get_volume)
 
+    def cells_in_polygon(self, polygon):
+        """Returns cells in layer lying within the specified horizontal
+        polygon."""
+        return [c for c in self.cell if c.column.in_polygon(polygon)]
+
 class cell(object):
     """Mesh cell."""
 
