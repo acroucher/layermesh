@@ -135,6 +135,11 @@ class mesh(object):
         return len(self.layer)
     num_layers = property(get_num_layers)
 
+    def get_volume(self):
+        """Returns total volume of mesh."""
+        return sum([col.volume for col in self.column])
+    volume = property(get_volume)
+
     def add_node(self, n):
         """Adds horizontal node to mesh."""
         self.node.append(n)
