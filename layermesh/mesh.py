@@ -91,6 +91,9 @@ class layer(object):
     def get_num_columns(self): return len(self.column)
     num_columns = property(get_num_columns)
 
+    def get_num_cells(self): return len(self.cell)
+    num_cells = property(get_num_cells)
+
     @memoize
     def get_centre(self):
         """Returns layer centre."""
