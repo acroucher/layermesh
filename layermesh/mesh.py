@@ -117,6 +117,11 @@ class layer(object):
         polygon."""
         return [c for c in self.cell if c.column.in_polygon(polygon)]
 
+    def translate(self, shift):
+        """Translates layer vertically by specified shift."""
+        self.bottom += shift
+        self.top += shift
+
 class cell(object):
     """Mesh cell."""
 
@@ -346,6 +351,12 @@ class mesh(object):
         return [col.cell[0] for col in self.column]
     surface_cells = property(get_surface_cells)
 
-    # def translate(self, shift):
-    #     """Translates mesh by specified 3-D shift vector."""
+    def translate(self, shift):
+        """Translates mesh by specified 3-D shift vector."""
+        if isinstance(shift, (list, tuple)): shift = np.array(shift)
+        for node in self.node: node.pos += shift[0:2]
+        for col in self.column:
+            if col.surface is not None:
+                col.surface += shift[2]
+        for layer in self.layer: layer.translate(shift[2])
         
