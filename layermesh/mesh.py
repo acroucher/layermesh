@@ -321,3 +321,7 @@ class mesh(object):
 
     meshio_points_cells = property(get_meshio_points_cells)
 
+    def get_surface_cells(self):
+        """Returns cells at mesh surface."""
+        return [col.cell[0] for col in self.column]
+    surface_cells = property(get_surface_cells)
