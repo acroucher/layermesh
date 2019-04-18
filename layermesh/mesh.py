@@ -45,6 +45,9 @@ class column(object):
     def get_num_nodes(self): return len(self.node)
     num_nodes = property(get_num_nodes)
 
+    def get_num_layers(self): return len(self.layer)
+    num_layers = property(get_num_layers)
+
     def get_polygon(self):
         """Returns polygon formed by column node positions."""
         return [node.pos for node in self.node]
@@ -68,12 +71,13 @@ class column(object):
 class layer(object):
     """Mesh layer."""
 
-    def __init__(self, bottom, top):
+    def __init__(self, bottom, top, index = None):
         self.bottom = bottom
         self.top = top
+        self.index = index
 
     def __repr__(self):
-        return str(self.bottom) + ': ' + str(self.top)
+        return str(self.index)
 
     @memoize
     def get_centre(self):
@@ -130,25 +134,22 @@ class mesh(object):
         for n in col.node:
             n.column.add(col)
 
-    def set_column_num_layers(self, col):
-        """Sets number of layers in column, based on its surface value and the
-        mesh layer structure."""
+    def set_column_layers(self, col):
+        """Populates list of layers for given column."""
         s = col.surface if col.surface is not None else self.layer[0].top
-        col.num_layers = len([lay for lay in self.layer if s >= lay.centre])
+        col.layer = [lay for lay in self.layer if s >= lay.centre]
 
-    def set_layer_columns(self, ilayer, lay):
+    def set_layer_columns(self, lay):
         """Populates list of columns for given layer."""
-        lay.column = []
-        for col in self.column:
-            if self.column_in_layer(col, ilayer):
-                lay.column.append(col)
+        lay.column = [col for col in self.column
+                      if self.column_in_layer(col, lay)]
 
     def setup(self):
         """Sets up internal mesh variables."""
         for col in self.column:
-            self.set_column_num_layers(col)
+            self.set_column_layers(col)
         for ilayer, lay in enumerate(self.layer):
-            self.set_layer_columns(ilayer, lay)
+            self.set_layer_columns(lay)
         self.layer_column_indices = []
         for ilayer, lay in enumerate(self.layer):
             for ilaycol, col in enumerate(lay.column):
@@ -196,17 +197,19 @@ class mesh(object):
 
         self.layer = []
         z = 0.
+        index = 0
         for thickness in spacings:
             top = z
             z -= thickness
             bottom = z
-            lay = layer(bottom, top)
+            lay = layer(bottom, top, index)
             self.add_layer(lay)
+            index += 1
 
-    def column_in_layer(self, col, ilayer):
-        """Returns true if column is in the layer with specified index, or
+    def column_in_layer(self, col, lay):
+        """Returns true if column is in the specified layer, or
         false otherwise."""
-        return col.num_layers >= self.num_layers - ilayer
+        return col.num_layers >= self.num_layers - lay.index
 
     def set_column_surfaces(self, surface):
         """Sets column surface properties from surface dictionary (keyed by
