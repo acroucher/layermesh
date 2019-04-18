@@ -188,6 +188,12 @@ class mesh(object):
         return sum([col.volume for col in self.column])
     volume = property(get_volume)
 
+    def get_bounds(self):
+        """Returns horizontal bounding box for mesh."""
+        from geometry import bounds_of_points
+        return bounds_of_points([node.pos for node in self.node])
+    bounds = property(get_bounds)
+
     def add_node(self, n):
         """Adds horizontal node to mesh."""
         self.node.append(n)
