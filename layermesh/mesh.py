@@ -68,6 +68,12 @@ class column(object):
         return polygon_area(self.polygon)
     area = property(get_area)
 
+    @memoize
+    def get_volume(self):
+        """Returns column volume."""
+        return self.area * sum([lay.thickness for lay in self.layer])
+    volume = property(get_volume)
+
 class layer(object):
     """Mesh layer."""
 
