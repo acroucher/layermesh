@@ -169,6 +169,11 @@ class mesh(object):
         return len(self.layer)
     num_layers = property(get_num_layers)
 
+    def get_area(self):
+        """Returns horizontal area of mesh. """
+        return sum([col.area for col in self.column])
+    area = property(get_area)
+
     def get_volume(self):
         """Returns total volume of mesh."""
         return sum([col.volume for col in self.column])

@@ -33,6 +33,7 @@ class meshTestCase(unittest.TestCase):
         self.assertTrue(all([col.area == area for col in m.column]))
         vol = 120. * 6
         self.assertTrue(all([col.volume == vol for col in m.column]))
+        self.assertEqual(m.area, 1080)
         self.assertEqual(m.volume, 6480)
 
     def test_surface(self):
