@@ -62,7 +62,7 @@ def rect_to_poly(rect):
             rect[1], np.array(rect[0][0], rect[1][1])]
 
 def polygon_area(polygon):
-    """Calculates the area of an arbitrary polygon."""
+    """Calculates the (unsigned) area of an arbitrary polygon."""
     area = 0.0
     n = len(polygon)
     if n > 0:
@@ -70,7 +70,7 @@ def polygon_area(polygon):
         for j, p1 in enumerate(polygon):
             p2 = polygon[(j+1) % n]
             area += p1[0] * p2[1] - p2[0] * p1[1]
-    return 0.5 * area
+    return 0.5 * abs(area)
 
 def polygon_centroid(polygon):
     """Calculates the centroid of an arbitrary polygon."""
