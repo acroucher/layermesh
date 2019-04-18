@@ -91,6 +91,27 @@ class meshTestCase(unittest.TestCase):
         cells = m.layer[0].cells_in_polygon(poly)
         self.assertEqual(cells, [])
 
+    def test_translate(self):
+
+        dx = [10, 20, 30]; dy = [20, 15, 10]
+        dz = [5, 10, 15]
+        surface = [0.2, -9, -18] * 3
+        m = mesh(columns = [dx, dy], layers = dz, surface = surface)
+        b = m.bounds
+        self.assertEqual(np.linalg.norm(b[0]), 0.)
+        self.assertEqual(
+            np.linalg.norm(b[1] - np.array([60, 45])), 0.)
+        m.translate([10, 15, 30])
+        b = m.bounds
+        self.assertEqual(
+            np.linalg.norm(b[0] - np.array([10, 15])), 0.)
+        self.assertEqual(
+            np.linalg.norm(b[1] - np.array([70, 60])), 0.)
+        self.assertEqual(m.layer[0].top, 30)
+        self.assertEqual(m.layer[-1].bottom, 0)
+        self.assertEqual(m.layer[0].centre, 27.5)
+        self.assertEqual(m.layer[-1].centre, 7.5)
+
     def test_meshio_points_cells(self):
 
         dx = [10.]*3; dy = [12.] * 3
