@@ -77,6 +77,15 @@ class column(object):
         return self.area * sum([lay.thickness for lay in self.layer])
     volume = property(get_volume)
 
+    def in_polygon(self, polygon):
+        """Returns true if the centre of the column is inside the specified
+        polygon."""
+        from geometry import in_rectangle, in_polygon
+        if len(polygon) == 2:
+            return in_rectangle(self.centre, polygon)
+        else:
+            return in_polygon(self.centre, polygon)
+
 class layer(object):
     """Mesh layer."""
 
