@@ -12,6 +12,14 @@ You should have received a copy of the GNU Lesser General Public License along w
 
 import numpy as np
 
+def memoize(f):
+    """Decorator for caching function values."""
+    memo = {}
+    def check(x):
+        if x not in memo: memo[x] = f(x)
+        return memo[x]
+    return check
+
 class node(object):
     """2-D mesh node."""
 
