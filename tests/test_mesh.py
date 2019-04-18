@@ -44,17 +44,23 @@ class meshTestCase(unittest.TestCase):
         surface = {4: -1}
         m = mesh(columns = [dx, dy], layers = dz, surface = surface)
         self.assertEqual(m.num_cells, 26)
+        self.assertEqual([col.num_cells for col in m.column],
+                         [3, 3, 3, 3, 2, 3, 3, 3, 3])
+        self.assertEqual([lay.num_cells for lay in m.layer],
+                         [8, 9, 9])
         self.assertEqual(m.volume, 6360)
 
         surface = [-3] * 9
         m = mesh(columns = [dx, dy], layers = dz, surface = surface)
         self.assertEqual(m.num_cells, 9)
+        self.assertEqual([col.num_cells for col in m.column], [1] * 9)
+        self.assertEqual([lay.num_cells for lay in m.layer], [0, 0, 9])
         self.assertEqual(m.volume, 3240)
 
         surface = [0.2, -0.8, -1.5] * 3
         m = mesh(columns = [dx, dy], layers = dz, surface = surface)
-        nlay = [col.num_layers for col in m.column]
-        self.assertEqual(nlay, [3, 2, 2] * 3)
+        self.assertEqual([col.num_cells for col in m.column], [3, 2, 2] * 3)
+        self.assertEqual([lay.num_cells for lay in m.layer], [3, 9, 9])
         self.assertEqual(m.volume, 5760)
 
     def test_meshio_points_cells(self):
