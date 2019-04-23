@@ -325,20 +325,19 @@ class mesh(object):
         node_index = {}
         point_index = 0
 
-        for ilayer, lay in enumerate(self.layer):
-            for col in lay.column:
-                elt = []
-                for i in [ilayer - 1, ilayer]:
-                    for n in col.node:
-                        k = (i, n.index)
-                        if k not in node_index: # create point:
-                            z = self.layer[i].bottom if i >= 0 else self.layer[0].top
-                            pos = np.concatenate((n.pos, np.array([z])))
-                            points.append(pos)
-                            node_index[k] = point_index
-                            point_index += 1
-                        elt.append(node_index[k])
-                cells[cell_type[len(elt)]].append(elt)
+        for c in self.cell:
+            elt = []
+            for iz, z in enumerate([c.layer.top, c.layer.bottom]):
+                ilayer = c.layer.index + iz
+                for n in c.column.node:
+                    k = (ilayer, n.index)
+                    if k not in node_index: # create point:
+                        pos = np.concatenate((n.pos, np.array([z])))
+                        points.append(pos)
+                        node_index[k] = point_index
+                        point_index += 1
+                    elt.append(node_index[k])
+            cells[cell_type[len(elt)]].append(elt)
 
         points = np.array(points)
         cells = dict([(k, np.array(v)) for k, v in cells.items() if v])
