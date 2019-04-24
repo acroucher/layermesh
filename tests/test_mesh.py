@@ -74,23 +74,6 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual([lay.volume for lay in m.layer],
                          [360, 2160, 3240])
 
-    def test_polygons(self):
-
-        dx = [10, 20, 30]; dy = [20, 15, 10]
-        dz = [5, 10, 15]
-        surface = [0.2, -9, -18] * 3
-        m = mesh(columns = [dx, dy], layers = dz, surface = surface)
-        self.assertEqual(m.num_cells, 18)
-        self.assertEqual(m.volume, 56250)
-        poly = [np.array([8, -5]), np.array([11, 40]),
-                np.array([20, 35]), np.array([40, 10]), np.array([20, -5])]
-        cells = m.layer[-1].cells_in_polygon(poly)
-        self.assertEqual([c.index for c in cells], [10, 13])
-        cells = m.layer[1].cells_in_polygon(poly)
-        self.assertEqual([c.index for c in cells], [4, 6])
-        cells = m.layer[0].cells_in_polygon(poly)
-        self.assertEqual(cells, [])
-
     def test_translate(self):
 
         dx = [10, 20, 30]; dy = [20, 15, 10]
@@ -126,6 +109,65 @@ class meshTestCase(unittest.TestCase):
         m = mesh(columns = [dx, dy], layers = dz, surface = surface)
         points, cells = m.meshio_points_cells
         self.assertEqual(len(cells['hexahedron']), 21)
+
+    def test_find(self):
+
+        dx = [10, 20, 30]; dy = [20, 15, 10]
+        dz = [5, 10, 15]
+        surface = [0.2, -9, -18] * 3
+        m = mesh(columns = [dx, dy], layers = dz, surface = surface)
+
+        self.assertEqual(m.num_cells, 18)
+        self.assertEqual(m.volume, 56250)
+
+        p = (8, 5, -2)
+        c = m.find(p)
+        self.assertEqual(c.index, 0)
+
+        p = [25, 25, -12]
+        c = m.find(p, indices = True)
+        self.assertEqual(c, 6)
+
+        p = [25, 25, -4]
+        c = m.find(p)
+        self.assertIsNone(c)
+
+        p = np.array([40, 50, -20])
+        c = m.find(p)
+        self.assertIsNone(c)
+
+        poly = [[8, -5], [11, 40], [20, 35], [40, 10], [20, -5]]
+        cells = m.layer[-1].find(poly, indices = True)
+        self.assertEqual(cells, [10, 13])
+        cells = m.layer[1].find(poly, indices = True)
+        self.assertEqual(cells, [4, 6])
+        cells = m.layer[0].find(poly)
+        self.assertEqual(cells, [])
+
+        c = m.layer[-1].find([45., 42.], indices = True)
+        self.assertEqual(c, 17)
+        c = m.layer[1].find([45., 42.])
+        self.assertIsNone(c)
+
+        cells = m.layer[-1].find(lambda c: c.column.centre[1] > 30,
+                                 indices = True)
+        self.assertEqual(cells, [15, 16, 17])
+
+        cells = m.find(lambda c: c.index == 0)
+        self.assertEqual(len(cells), 1)
+        self.assertEqual(cells[0].index, 0)
+
+        cells = m.find(lambda c: c.index >= 0, indices = True)
+        self.assertEqual(cells, range(18))
+
+        cells = m.find(lambda c: c.index < 0)
+        self.assertEqual(cells, [])
+
+        cells = m.find(lambda c: c.centre[2] < -15, indices = True)
+        self.assertEqual(cells, range(9, 18))
+
+        cells = m.find(lambda c: c.volume >= 4000, indices = True)
+        self.assertEqual(cells, [4, 10, 11, 13, 14, 17])
 
 if __name__ == '__main__':
 
