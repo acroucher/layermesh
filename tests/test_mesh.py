@@ -73,6 +73,9 @@ class meshTestCase(unittest.TestCase):
                          [360, 1080, 1080])
         self.assertEqual([lay.volume for lay in m.layer],
                          [360, 2160, 3240])
+        self.assertTrue(all([c.surface for c in m.surface_cells]))
+        subsurface_cells = list(set(m.cell) - set(m.surface_cells))
+        self.assertFalse(any([c.surface for c in subsurface_cells]))
 
     def test_translate(self):
 
@@ -168,6 +171,9 @@ class meshTestCase(unittest.TestCase):
 
         cells = m.find(lambda c: c.volume >= 4000, indices = True)
         self.assertEqual(cells, [4, 10, 11, 13, 14, 17])
+
+        cells = m.find(lambda c: not c.surface)
+        self.assertEqual(len(cells), 9)
 
 if __name__ == '__main__':
 

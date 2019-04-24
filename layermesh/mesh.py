@@ -153,7 +153,6 @@ class layer(object):
         case a list of cells with columns inside the polygon is
         returned.  If indices is True, the cell indices are returned
         rather than the cells themselves.
-
         """
 
         if isinstance(match, (tuple, list)) and \
@@ -200,6 +199,11 @@ class cell(object):
                                np.array([self.layer.centre])])
     centroid = property(get_centroid)
     centre = property(get_centroid)
+
+    def get_surface(self):
+        """Returns True if cell is at surface of mesh, False otherwise."""
+        return self == self.column.cell[0]
+    surface = property(get_surface)
 
 class mesh(object):
     """Layered computational mesh."""
