@@ -10,7 +10,6 @@ layermesh is distributed in the hope that it will be useful, but WITHOUT ANY WAR
 
 You should have received a copy of the GNU Lesser General Public License along with layermesh.  If not, see <http://www.gnu.org/licenses/>."""
 
-from __future__ import print_function
 import numpy as np
 
 def in_polygon(pos, polygon):
