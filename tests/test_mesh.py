@@ -41,7 +41,7 @@ class meshTestCase(unittest.TestCase):
         dx = [10.]*3; dy = [12.] * 3
         dz = [1., 2., 3.]
         m = mesh(columns = [dx, dy], layers = dz)
-        self.assertEqual([c.index for c in m.surface_cells], range(9))
+        self.assertEqual([c.index for c in m.surface_cells], list(range(9)))
 
         surface = {4: -1}
         m = mesh(columns = [dx, dy], layers = dz, surface = surface)
@@ -60,7 +60,7 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual([col.num_cells for col in m.column], [1] * 9)
         self.assertEqual([lay.num_cells for lay in m.layer], [0, 0, 9])
         self.assertEqual(m.volume, 3240)
-        self.assertEqual([c.index for c in m.surface_cells], range(9))
+        self.assertEqual([c.index for c in m.surface_cells], list(range(9)))
 
         surface = [0.2, -0.8, -1.5] * 3
         m = mesh(columns = [dx, dy], layers = dz, surface = surface)
@@ -161,13 +161,13 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(cells[0].index, 0)
 
         cells = m.find(lambda c: c.index >= 0, indices = True)
-        self.assertEqual(cells, range(18))
+        self.assertEqual(cells, list(range(18)))
 
         cells = m.find(lambda c: c.index < 0)
         self.assertEqual(cells, [])
 
         cells = m.find(lambda c: c.centre[2] < -15, indices = True)
-        self.assertEqual(cells, range(9, 18))
+        self.assertEqual(cells, list(range(9, 18)))
 
         cells = m.find(lambda c: c.volume >= 4000, indices = True)
         self.assertEqual(cells, [4, 10, 11, 13, 14, 17])
