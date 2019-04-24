@@ -16,6 +16,10 @@ class geometryTestCase(unittest.TestCase):
         p = np.array([0.4, 0.3])
         self.assertTrue(geometry.in_polygon(p, poly))
 
+        poly = [[0, 0], [0, 1], [1, 1]]
+        p = [0.5, 0.8]
+        self.assertTrue(geometry.in_polygon(p, poly))
+
     def test_in_rectangle(self):
         """in_rectangle()"""
         rect = [
@@ -58,20 +62,25 @@ class geometryTestCase(unittest.TestCase):
         self.assertTrue((np.array([4., 3.]) == bds[1]).all())
 
     def test_polygon_area(self):
-        """poygon_area()"""
+        """polygon_area()"""
         poly = [
             np.array([0., 0.]),
             np.array([1., 0.]),
             np.array([0., 1.]),
         ]
-        self.assertAlmostEqual(0.5, geometry.polygon_area(poly))
-        poly = [
-            np.array([1., 2.]),
-            np.array([3., 2.]),
-            np.array([3., 4.]),
-            np.array([1., 4.]),
-        ]
-        self.assertAlmostEqual(4., geometry.polygon_area(poly))
+        self.assertEqual(geometry.polygon_area(poly), 0.5)
+
+        poly = [[1, 2], [3, 2], [3, 4], [1, 4]]
+        self.assertEqual(geometry.polygon_area(poly), 4)
+
+        poly = [[1., 2], [1, 4.], [3., 4], [3., 2]]
+        self.assertEqual(geometry.polygon_area(poly), 4)
+
+        poly = [[0, 0], [0, 1], [1, 1]]
+        self.assertEqual(geometry.polygon_area(poly), 0.5)
+
+        poly = [[0., 0.], [ 0., 20.], [10., 20.], [10.,  0.]]
+        self.assertEqual(geometry.polygon_area(poly), 200.)
 
     def test_polygon_centroid(self):
         """polygon_centroid()"""
