@@ -16,7 +16,7 @@ class node(object):
     """2-D mesh node."""
 
     def __init__(self, pos, index = None):
-        self.pos = pos
+        self.pos = np.array(pos)
         self.index = index
         self.column = set()
 
@@ -323,7 +323,7 @@ class mesh(object):
         index = 0
         for y in verts[1]:
             for x in verts[0]:
-                n = node(pos = np.array([x, y]), index = index)
+                n = node(pos = [x, y], index = index)
                 self.add_node(n); index += 1
         index = 0
         for j in range(ns[1]):
