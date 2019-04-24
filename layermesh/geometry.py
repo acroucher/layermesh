@@ -16,6 +16,7 @@ def in_polygon(pos, polygon):
     """Tests if the (2-D) point a lies within a given polygon."""
     tolerance = 1.e-6
     numcrossings = 0
+    pos = np.array(pos)
     poly = [np.array(v, dtype = float) for v in polygon]
     ref = poly[0]
     v = pos - ref
@@ -66,22 +67,24 @@ def polygon_area(polygon):
     area = 0.0
     n = len(polygon)
     if n > 0:
-        polygon -= polygon[0]
-        for j, p1 in enumerate(polygon):
-            p2 = polygon[(j+1) % n]
+        poly = [np.array(v, dtype = float) for v in polygon]
+        poly -= poly[0]
+        for j, p1 in enumerate(poly):
+            p2 = poly[(j+1) % n]
             area += p1[0] * p2[1] - p2[0] * p1[1]
     return 0.5 * abs(area)
 
 def polygon_centroid(polygon):
     """Calculates the centroid of an arbitrary polygon."""
     c, area = np.zeros(2), 0.
-    n = len(polygon)
-    shift = polygon[0]
-    polygon -= shift # shift to reduce roundoff for large coordinates
-    if n < 3: return sum(polygon) / n + shift
+    poly = [np.array(v, dtype = float) for v in polygon]
+    n = len(poly)
+    shift = poly[0]
+    poly -= shift # shift to reduce roundoff for large coordinates
+    if n < 3: return sum(poly) / n + shift
     else:
-        for j, p1 in enumerate(polygon):
-            p2 = polygon[(j+1) % n]
+        for j, p1 in enumerate(poly):
+            p2 = poly[(j+1) % n]
             t = p1[0] * p2[1] - p2[0] * p1[1]
             area += t
             c += (p1 + p2) * t
@@ -97,14 +100,16 @@ def line_polygon_intersections(polygon, line, bound_line = (True,True),
     is True, also return polygon side indices of intersections.
     """
     crossings = []
-    ref = polygon[0]
+    poly = [np.array(v, dtype = float) for v in polygon]
+    line = [np.array(p) for p in line]
+    ref = poly[0]
     l1, l2 = line[0] - ref, line[1] - ref
     tol = 1.e-12
     ind = {}
     def in_unit(x): return -tol <= x <= 1.0 + tol
-    for i, p in enumerate(polygon):
+    for i, p in enumerate(poly):
         p1 = p - ref
-        p2 = polygon[(i+1)%len(polygon)] - ref
+        p2 = poly[(i+1)%len(poly)] - ref
         dp = p2 - p1
         A, b = np.column_stack((dp, l1 - l2)), l1 - p1
         try:
@@ -139,9 +144,10 @@ def simplify_polygon(polygon, tolerance = 1.e-6):
     specified.
     """
     s = []
-    N = len(polygon)
-    for i, p in enumerate(polygon[:]):
-        l, n = polygon[i-1], polygon[(i+1)%N]
+    poly = [np.array(v, dtype = float) for v in polygon]
+    N = len(poly)
+    for i, p in enumerate(poly[:]):
+        l, n = poly[i-1], poly[(i+1)%N]
         dl, dn = p - l, n - p
         if np.dot(dl, dn) < (1. - tolerance) * \
            np.linalg.norm(dl) * np.linalg.norm(dn):
@@ -152,15 +158,16 @@ def polygon_boundary(this, other, polygon):
     """Returns point on a line between vector this and other and also on
     the boundary of the polygon"""
     big = 1.e10
-    ref = polygon[0]
+    poly = [np.array(v, dtype = float) for v in polygon]
+    ref = poly[0]
     a = this - ref
     b = other - ref
     v = None
     dmin = big
-    for i in range(len(polygon)):
-        c = polygon[i] - ref
-        i2 = (i + 1) % len(polygon)
-        d = polygon[i2] - ref
+    for i in range(len(poly)):
+        c = poly[i] - ref
+        i2 = (i + 1) % len(poly)
+        d = poly[i2] - ref
         M = np.transpose(np.array([b - a, c - d]))
         try:
             r = np.linalg.solve(M, c - a)
@@ -176,6 +183,7 @@ def polygon_boundary(this, other, polygon):
 def line_projection(a, line, return_xi = False):
     """Finds projection of point a onto a line (defined by two vectors).  Optionally
     return the non-dimensional distance xi between the line start and end."""
+    line = [np.array(p) for p in line]
     d = line[1] - line[0]
     try:
         xi = np.dot(a - line[0], d) / np.dot(d, d)
@@ -202,6 +210,7 @@ def vector_heading(p):
     """Returns heading angle of a 2-D vector p, in radians clockwise from
     the y-axis ('north')."""
     from math import asin
+    p = np.array(p)
     theta = asin(p[0] / np.linalg.norm(p))
     if p[1] < 0: theta = np.pi - theta
     if theta < 0: theta += 2. * np.pi
