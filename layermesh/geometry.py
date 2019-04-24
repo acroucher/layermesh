@@ -17,12 +17,13 @@ def in_polygon(pos, polygon):
     """Tests if the (2-D) point a lies within a given polygon."""
     tolerance = 1.e-6
     numcrossings = 0
-    ref = polygon[0]
+    poly = [np.array(v, dtype = float) for v in polygon]
+    ref = poly[0]
     v = pos - ref
-    for i in range(len(polygon)):
-        p1 = polygon[i] - ref
-        i2 = (i+1) % len(polygon)
-        p2 = polygon[i2] - ref
+    for i in range(len(poly)):
+        p1 = poly[i] - ref
+        i2 = (i+1) % len(poly)
+        p2 = poly[i2] - ref
         if p1[1] <= v[1] < p2[1] or p2[1] <= v[1] < p1[1]:
             d = p2 - p1
             if abs(d[1]) > tolerance:
