@@ -8,4 +8,5 @@ setup(name='layermesh',
       author_email='a.croucher@auckland.ac.nz',
       license='LGPL',
       packages=['layermesh'],
+      install_requires=['numpy'],
       zip_safe=False)
