@@ -66,7 +66,13 @@ class column(object):
         return self.area * sum([lay.thickness for lay in self.layer])
     volume = property(get_volume)
 
-    def in_polygon(self, polygon):
+    def contains(self, pos):
+        """Returns True if the column contains the 2-D point pos (tuple, list or
+        numpy array of length 2)."""
+        from geometry import in_polygon
+        return in_polygon(np.array(pos), self.polygon)
+
+    def inside(self, polygon):
         """Returns true if the centre of the column is inside the specified
         polygon."""
         from geometry import in_rectangle, in_polygon
@@ -112,15 +118,65 @@ class layer(object):
         return self.area * self.thickness
     volume = property(get_volume)
 
-    def cells_in_polygon(self, polygon):
-        """Returns cells in layer lying within the specified horizontal
-        polygon."""
-        return [c for c in self.cell if c.column.in_polygon(polygon)]
-
     def translate(self, shift):
         """Translates layer vertically by specified shift."""
         self.bottom += shift
         self.top += shift
+
+    def contains(self, z):
+        """Returns True if layer contains specified elevation z, or False
+        otherwise."""
+        return self.bottom <= z <= self.top
+
+    def cell_containing(self, pos):
+        """Returns cell in layer with column containing the 2-D point pos (a
+        tuple, list or numpy array of length 2). If no column in the
+        layer contains this point then None is returned.
+        """
+
+        for c in self.cell:
+            if c.column.contains(pos): return c
+        return None
+
+    def cells_inside(self, polygon):
+        """Returns a list of cells in the layer with columns inside the
+        specified polygon."""
+        return [c for c in self.cell if c.column.inside(polygon)]
+
+    def find(self, match, indices = False):
+        """Returns cell or cells in the layer satifying the specified matching
+        criterion. The match parameter can be a function taking a cell
+        and returning a Boolean, in which case a list of matching
+        cells is returned. Alternatively it can be a 2-D point (tuple,
+        list or numpy array), in which case the cell with column
+        containing the point is returned, or a 2-D polygon, in which
+        case a list of cells with columns inside the polygon is
+        returned.  If indices is True, the cell indices are returned
+        rather than the cells themselves.
+
+        """
+
+        if isinstance(match, (tuple, list)) and \
+           all([isinstance(item, (float, int)) for item in match]) or \
+           isinstance(match, np.ndarray):
+            if len(match) == 2:
+                c = self.cell_containing(match)
+                if c is None: return None
+                else: return c.index if indices else c
+            else:
+                raise Exception('Point to match is not of length 2.')
+        elif isinstance(match, (list, tuple)) and \
+             all([isinstance(item, (tuple, list, np.ndarray)) and \
+                             len(item) == 2 for item in match]):
+            cells = self.cells_inside(match)
+            if cells:
+                return [c.index for c in cells] if indices else cells
+            else: return []
+        else:
+            cells = [c for c in self.cell if match(c)]
+            if cells:
+                return [c.index for c in cells] if indices else cells
+            else: return []
 
 class cell(object):
     """Mesh cell."""
@@ -358,4 +414,43 @@ class mesh(object):
             if col.surface is not None:
                 col.surface += shift[2]
         for layer in self.layer: layer.translate(shift[2])
-        
+
+    def find_layer(self, z):
+        """Returns layer containing elevation z, or None if the point is
+        outside the mesh."""
+        for lay in self.layer:
+            if lay.contains(z): return lay
+        return None
+
+    def find_cell(self, pos):
+        """Returns cell containing point pos (list, tuple or numpy array of
+        length 3), or None if pos is outside the mesh."""
+
+        lay = self.find_layer(pos[2])
+        if lay is None:
+            return None
+        else:
+            return lay.find(pos[:2])
+
+    def find(self, match, indices = False):
+        """Returns cell or cells matching the specified matching
+        criterion. The match parameter can be a function taking a cell
+        and returning a Boolean, in which case a list of matching
+        cells is returned. Alternatively it can be a 3-D point (tuple,
+        list or numpy array), in which case the cell containing the
+        point is returned.  If indices is True, the cell
+        indices are returned rather than the cells themselves.
+        """
+
+        if isinstance(match, (tuple, list, np.ndarray)):
+            if len(match) == 3:
+                c = self.find_cell(match)
+                if c is None: return None
+                else: return c.index if indices else c
+            else:
+                raise Exception('Point to match is not of length 3.')
+        else:
+            cells = [c for c in self.cell if match(c)]
+            if cells:
+                return [c.index for c in cells] if indices else cells
+            else: return []
