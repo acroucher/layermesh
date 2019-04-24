@@ -1,8 +1,9 @@
 layermesh/__init__.py
 layermesh/geometry.py
-layermesh/layermesh.py
+layermesh/mesh.py
 layermesh.egg-info/PKG-INFO
 layermesh.egg-info/SOURCES.txt
 layermesh.egg-info/dependency_links.txt
 layermesh.egg-info/not-zip-safe
+layermesh.egg-info/requires.txt
 layermesh.egg-info/top_level.txt

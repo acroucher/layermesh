@@ -50,14 +50,14 @@ class column(object):
 
     def get_centroid(self):
         """Returns column centroid."""
-        from geometry import polygon_centroid
+        from layermesh.geometry import polygon_centroid
         return polygon_centroid(self.polygon)
     centroid = property(get_centroid)
     centre = property(get_centroid)
 
     def get_area(self):
         """Returns column area."""
-        from geometry import polygon_area
+        from layermesh.geometry import polygon_area
         return polygon_area(self.polygon)
     area = property(get_area)
 
@@ -69,13 +69,13 @@ class column(object):
     def contains(self, pos):
         """Returns True if the column contains the 2-D point pos (tuple, list or
         numpy array of length 2)."""
-        from geometry import in_polygon
+        from layermesh.geometry import in_polygon
         return in_polygon(np.array(pos), self.polygon)
 
     def inside(self, polygon):
         """Returns true if the centre of the column is inside the specified
         polygon."""
-        from geometry import in_rectangle, in_polygon
+        from layermesh.geometry import in_rectangle, in_polygon
         if len(polygon) == 2:
             return in_rectangle(self.centre, polygon)
         else:
@@ -255,7 +255,7 @@ class mesh(object):
 
     def get_bounds(self):
         """Returns horizontal bounding box for mesh."""
-        from geometry import bounds_of_points
+        from layermesh.geometry import bounds_of_points
         return bounds_of_points([node.pos for node in self.node])
     bounds = property(get_bounds)
 
