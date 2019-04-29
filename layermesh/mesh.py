@@ -422,9 +422,15 @@ class mesh(object):
     def find_layer(self, z):
         """Returns layer containing elevation z, or None if the point is
         outside the mesh."""
-        for lay in self.layer:
-            if lay.contains(z): return lay
-        return None
+        if self.layer[-1].bottom <= z <= self.layer[0].top:
+            i0, i1 = 0, self.num_layers - 1
+            while i1 > i0:
+                im = (i0 + i1) // 2
+                if z >= self.layer[im].bottom: i1 = im
+                else: i0 = im + 1
+            return self.layer[i1]
+        else:
+            return None
 
     def find_cell(self, pos):
         """Returns cell containing point pos (list, tuple or numpy array of
