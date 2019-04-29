@@ -93,6 +93,27 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(m.layer[-1].centre, 7.5)
         self.assertTrue(np.allclose(m.centre, np.array([40., 37.5])))
 
+    def test_rotate(self):
+
+        dx = [10, 20, 30]; dy = [20, 15, 10]
+        dz = [5, 10, 15]
+        surface = [0.2, -9, -18] * 3
+        m = mesh(columns = [dx, dy], layers = dz, surface = surface)
+        m.rotate(90, np.zeros(2))
+        b = m.bounds
+        self.assertTrue(np.allclose(b[0], np.array([0, -60])))
+        self.assertTrue(np.allclose(b[1], np.array([45, 0])))
+        self.assertTrue(np.allclose(m.centre, np.array([22.5, -30])))
+        self.assertTrue(np.allclose(m.column[-1].centre, np.array([40, -45])))
+
+        m = mesh(columns = [dx, dy], layers = dz, surface = surface)
+        m.rotate(180)
+        b = m.bounds
+        self.assertTrue(np.allclose(b[0], np.zeros(2)))
+        self.assertTrue(np.allclose(b[1], np.array([60, 45])))
+        self.assertTrue(np.allclose(m.centre, np.array([30, 22.5])))
+        self.assertTrue(np.allclose(m.column[-1].centre, np.array([15, 5])))
+
     def test_meshio_points_cells(self):
 
         dx = [10.]*3; dy = [12.] * 3

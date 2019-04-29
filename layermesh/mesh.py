@@ -432,6 +432,18 @@ class mesh(object):
                 col.surface += shift[2]
         for layer in self.layer: layer.translate(shift[2])
 
+    def rotate(self, angle, centre = None):
+        """Rotates mesh horizontally by the specified angle (degrees
+        clockwise). If no centre is specified, the mesh is rotated
+        about its own centre."""
+        from layermesh.geometry import rotation
+        if centre is None:
+            c = self.centre
+        else:
+            c = np.array(centre)
+        A, b = rotation(angle, c)
+        for n in self.node: n.pos = np.dot(A, n.pos) + b
+
     def find_layer(self, z):
         """Returns layer containing elevation z, or None if the point is
         outside the mesh."""
