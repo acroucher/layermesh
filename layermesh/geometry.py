@@ -217,3 +217,18 @@ def vector_heading(p):
     elif theta > 2. * np.pi: theta -= 2. * np.pi
     return theta
 
+def rotation(angle, centre = None):
+    """Returns 2-D matrix A and vector b representing a rotation of the
+    specified angle (degrees clockwise) about the specified centre (or
+    the origin if no centre is specified). The rotation of a point p
+    is then given by Ap + b.
+    """
+    from math import radians, sin, cos
+    if centre is None: c = np.zeros(2)
+    else: c = np.array(centre)
+    angleradians = radians(angle)
+    cosangle, sinangle = cos(angleradians), sin(angleradians)
+    A = np.array([[cosangle, sinangle], [-sinangle, cosangle]])
+    b = np.dot(np.identity(2) - A, c)
+    return A, b
+

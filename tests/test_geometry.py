@@ -216,6 +216,41 @@ class geometryTestCase(unittest.TestCase):
         p = np.array([-3., 4.])
         h = geometry.vector_heading(p)
         self.assertAlmostEqual(h, 1.5 * np.pi + atan(4./ 3.))
+
+    def test_rotation(self):
+        """rotation()"""
+        from math import sqrt
+
+        A, b = geometry.rotation(0.)
+        self.assertTrue(np.allclose(A, np.identity(2)))
+        self.assertTrue(np.allclose(b, np.zeros(2)))
+
+        A, b = geometry.rotation(90.)
+        self.assertTrue(np.allclose(A, np.array([[0, 1], [-1, 0]])))
+        self.assertTrue(np.allclose(b, np.zeros(2)))
+
+        A, b = geometry.rotation(-30., (0, 0))
+        self.assertTrue(np.allclose(A, np.array([[sqrt(0.75), -0.5],
+                                                 [0.5, sqrt(0.75)]])))
+        self.assertTrue(np.allclose(b, np.zeros(2)))
+
+        A, b = geometry.rotation(0., [1, 0])
+        self.assertTrue(np.allclose(A, np.identity(2)))
+        self.assertTrue(np.allclose(b, np.zeros(2)))
+
+        A, b = geometry.rotation(90., [1, 1])
+        self.assertTrue(np.allclose(A, np.array([[0, 1], [-1, 0]])))
+        self.assertTrue(np.allclose(b, np.array([0, 2])))
+        p = np.array([1, 1])
+        r = np.dot(A, p) + b
+        self.assertTrue(np.allclose(r, np.array([1, 1])))
+        p = np.array([0, 0])
+        r = np.dot(A, p) + b
+        self.assertTrue(np.allclose(r, np.array([0, 2])))
+        p = np.array([2, 1])
+        r = np.dot(A, p) + b
+        self.assertTrue(np.allclose(r, np.array([1, 0])))
+
 if __name__ == '__main__':
 
     suite = unittest.TestLoader().loadTestsFromTestCase(geometryTestCase)
