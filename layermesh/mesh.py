@@ -253,6 +253,19 @@ class mesh(object):
         return sum([col.volume for col in self.column])
     volume = property(get_volume)
 
+    def get_centre(self):
+        """Returns horizontal centre of mesh, approximated by an area-weighted
+        average of column centres."""
+        if self.num_columns > 0:
+            c = np.zeros(2)
+            a = 0.
+            for col in self.column:
+                c += col.centre * col.area
+                a += col.area
+            return c / a
+        else: return None
+    centre = property(get_centre)
+
     def get_bounds(self):
         """Returns horizontal bounding box for mesh."""
         from layermesh.geometry import bounds_of_points

@@ -35,6 +35,7 @@ class meshTestCase(unittest.TestCase):
         self.assertTrue(all([col.volume == vol for col in m.column]))
         self.assertEqual(m.area, 1080)
         self.assertEqual(m.volume, 6480)
+        self.assertEqual(np.linalg.norm(m.centre - np.array([15., 18.])), 0.)
 
     def test_surface(self):
 
@@ -97,6 +98,7 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(m.layer[-1].bottom, 0)
         self.assertEqual(m.layer[0].centre, 27.5)
         self.assertEqual(m.layer[-1].centre, 7.5)
+        self.assertEqual(np.linalg.norm(m.centre - np.array([40., 37.5])), 0.)
 
     def test_meshio_points_cells(self):
 
