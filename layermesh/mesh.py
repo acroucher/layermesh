@@ -228,6 +228,10 @@ class mesh(object):
 
         self.setup()
 
+    def __repr__(self):
+        return '%d columns, %d layers, %d cells' % \
+            (self.num_columns, self.num_layers, self.num_cells)
+
     def get_num_nodes(self):
         """Returns number of 2-D nodes in mesh."""
         return len(self.node)
