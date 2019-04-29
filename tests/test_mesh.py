@@ -14,14 +14,14 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(m.num_layers, 3)
         self.assertEqual(m.num_cells, 27)
 
-        self.assertTrue((m.node[0].pos == np.zeros(2)).all())
-        self.assertTrue((m.node[-1].pos == np.array([30., 36.])).all())
+        self.assertTrue(np.allclose(m.node[0].pos, np.zeros(2)))
+        self.assertTrue(np.allclose(m.node[-1].pos, np.array([30., 36.])))
 
         centroids = [[5, 6], [15, 6], [25, 6],
                      [5, 18], [15, 18], [25, 18],
                      [5, 30], [15, 30], [25, 30]]
         for col, centroid in zip(m.column, centroids):
-            self.assertTrue((col.centre == np.array(centroid)).all())
+            self.assertTrue(np.allclose(col.centre, np.array(centroid)))
         layer_centres = [-0.5, -2, -4.5]
         for lay, centre in zip(m.layer, layer_centres):
             self.assertEqual(lay.centre, centre)
@@ -81,17 +81,17 @@ class meshTestCase(unittest.TestCase):
         surface = [0.2, -9, -18] * 3
         m = mesh(columns = [dx, dy], layers = dz, surface = surface)
         b = m.bounds
-        self.assertTrue(((b[0]) == np.zeros(2)).all())
-        self.assertTrue((b[1] == np.array([60, 45])).all())
+        self.assertTrue(np.allclose((b[0]), np.zeros(2)))
+        self.assertTrue(np.allclose(b[1], np.array([60, 45])))
         m.translate([10, 15, 30])
         b = m.bounds
-        self.assertTrue((b[0] == np.array([10, 15])).all())
-        self.assertTrue((b[1] == np.array([70, 60])).all())
+        self.assertTrue(np.allclose(b[0], np.array([10, 15])))
+        self.assertTrue(np.allclose(b[1], np.array([70, 60])))
         self.assertEqual(m.layer[0].top, 30)
         self.assertEqual(m.layer[-1].bottom, 0)
         self.assertEqual(m.layer[0].centre, 27.5)
         self.assertEqual(m.layer[-1].centre, 7.5)
-        self.assertTrue((m.centre == np.array([40., 37.5])).all())
+        self.assertTrue(np.allclose(m.centre, np.array([40., 37.5])))
 
     def test_meshio_points_cells(self):
 

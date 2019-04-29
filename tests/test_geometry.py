@@ -58,8 +58,8 @@ class geometryTestCase(unittest.TestCase):
             np.array([4., 3.])
         ]
         bds = geometry.bounds_of_points(pts)
-        self.assertTrue((np.array([-1.5, -1.1]) == bds[0]).all())
-        self.assertTrue((np.array([4., 3.]) == bds[1]).all())
+        self.assertTrue(np.allclose(bds[0], np.array([-1.5, -1.1])))
+        self.assertTrue(np.allclose(bds[1], np.array([4., 3.])))
 
     def test_polygon_area(self):
         """polygon_area()"""
@@ -91,7 +91,7 @@ class geometryTestCase(unittest.TestCase):
             np.array([1., 4.]),
         ]
         c = geometry.polygon_centroid(poly)
-        self.assertTrue((c == np.array([2, 3])).all())
+        self.assertTrue(np.allclose(c, np.array([2, 3])))
         poly = [
             np.array([0., 0.]),
             np.array([15., 0.]),
@@ -101,7 +101,7 @@ class geometryTestCase(unittest.TestCase):
             np.array([0., 10.])
         ]
         c = geometry.polygon_centroid(poly)
-        self.assertTrue((c == np.array([6.5, 4.5])).all())
+        self.assertTrue(np.allclose(c, np.array([6.5, 4.5])))
 
     def test_line_polygon_intersect(self):
         """line_polygon_intersections()"""
@@ -119,18 +119,18 @@ class geometryTestCase(unittest.TestCase):
         ]
         pts = geometry.line_polygon_intersections(poly, line)
         self.assertEqual(2, len(pts))
-        self.assertTrue((pts[0] == np.zeros(2)).all())
-        self.assertTrue((pts[1] == np.array([15, 4])).all())
+        self.assertTrue(np.allclose(pts[0], np.zeros(2)))
+        self.assertTrue(np.allclose(pts[1], np.array([15, 4])))
         line = [
             np.array([0., 17.5]),
             np.array([17.5, 0.])
         ]
         pts = geometry.line_polygon_intersections(poly, line)
         self.assertEqual(4, len(pts))
-        self.assertTrue((pts[0] == np.array([7.5, 10])).all())
-        self.assertTrue((pts[1] == np.array([10, 7.5])).all())
-        self.assertTrue((pts[2] == np.array([12.5, 5])).all())
-        self.assertTrue((pts[3] == np.array([15, 2.5])).all())
+        self.assertTrue(np.allclose(pts[0], np.array([7.5, 10])))
+        self.assertTrue(np.allclose(pts[1], np.array([10, 7.5])))
+        self.assertTrue(np.allclose(pts[2], np.array([12.5, 5])))
+        self.assertTrue(np.allclose(pts[3], np.array([15, 2.5])))
 
     def test_simplify_polygon(self):
         """simplify_polygon()"""
@@ -170,13 +170,13 @@ class geometryTestCase(unittest.TestCase):
         p1 = np.array([5., -1.])
         p2 = np.array([5., 12.])
         b = geometry.polygon_boundary(p1, p2, poly)
-        self.assertTrue((b == np.array([5, 0])).all())
+        self.assertTrue(np.allclose(b, np.array([5, 0])))
         p1 = np.array([5., 2.5])
         p2 = np.array([20., 2.5])
         b = geometry.polygon_boundary(p1, p2, poly)
-        self.assertTrue((b == np.array([15., 2.5])).all())
+        self.assertTrue(np.allclose(b, np.array([15., 2.5])))
         b = geometry.polygon_boundary(p2, p1, poly)
-        self.assertTrue((b == np.array([15., 2.5])).all())
+        self.assertTrue(np.allclose(b, np.array([15., 2.5])))
 
     def test_line_projection_distance(self):
         """line_projection() and point_line_distance()"""
@@ -187,13 +187,13 @@ class geometryTestCase(unittest.TestCase):
         ]
         a = np.array([1., 0.])
         p, xi = geometry.line_projection(a, line, True)
-        self.assertTrue((p == np.array([0.5, 0.5])).all())
+        self.assertTrue(np.allclose(p, np.array([0.5, 0.5])))
         self.assertEqual(xi, 0.5)
         d = geometry.point_line_distance(a, line)
         self.assertEqual(d, sqrt(0.5))
         a = np.array([2., 1.])
         p, xi = geometry.line_projection(a, line, True)
-        self.assertTrue((p == np.array([1.5, 1.5])).all())
+        self.assertTrue(np.allclose(p, np.array([1.5, 1.5])))
         self.assertEqual(xi, 1.5)
         d = geometry.point_line_distance(a, line)
         self.assertEqual(d, sqrt(0.5))
