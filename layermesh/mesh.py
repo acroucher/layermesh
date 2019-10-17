@@ -89,7 +89,7 @@ class column(object):
 
     def translate(self, shift):
         """Translates column horizontally by the specified shift array."""
-        if self._centroid:
+        if self._centroid is not None:
             self._centroid += np.array(shift)
 
 class layer(object):
