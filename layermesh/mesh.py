@@ -30,6 +30,8 @@ class column(object):
         self.node = node
         self.index = index
         self.surface = surface
+        self._centroid = None
+        self._area = None
 
     def __repr__(self):
         return str(self.index)
@@ -50,15 +52,19 @@ class column(object):
 
     def get_centroid(self):
         """Returns column centroid."""
-        from layermesh.geometry import polygon_centroid
-        return polygon_centroid(self.polygon)
+        if self._centroid is None:
+            from layermesh.geometry import polygon_centroid
+            self._centroid = polygon_centroid(self.polygon)
+        return self._centroid
     centroid = property(get_centroid)
     centre = property(get_centroid)
 
     def get_area(self):
         """Returns column area."""
-        from layermesh.geometry import polygon_area
-        return polygon_area(self.polygon)
+        if self._area is None:
+            from layermesh.geometry import polygon_area
+            self._area = polygon_area(self.polygon)
+        return self._area
     area = property(get_area)
 
     def get_volume(self):
@@ -81,6 +87,11 @@ class column(object):
         else:
             return in_polygon(self.centre, polygon)
 
+    def translate(self, shift):
+        """Translates column horizontally by the specified shift array."""
+        if self._centroid:
+            self._centroid += np.array(shift)
+
 class layer(object):
     """Mesh layer."""
 
@@ -88,6 +99,7 @@ class layer(object):
         self.bottom = bottom
         self.top = top
         self.index = index
+        self._centre = None
 
     def __repr__(self):
         return str(self.index)
@@ -100,7 +112,9 @@ class layer(object):
 
     def get_centre(self):
         """Returns layer centre."""
-        return 0.5 * (self.bottom + self.top)
+        if self._centre is None:
+            self._centre = 0.5 * (self.bottom + self.top)
+        return self._centre
     centre = property(get_centre)
 
     def get_thickness(self):
@@ -122,6 +136,8 @@ class layer(object):
         """Translates layer vertically by specified shift."""
         self.bottom += shift
         self.top += shift
+        if self._centre is not None:
+            self._centre += shift
 
     def contains(self, z):
         """Returns True if layer contains specified elevation z, or False
@@ -430,8 +446,9 @@ class mesh(object):
     def translate(self, shift):
         """Translates mesh by specified 3-D shift vector."""
         if isinstance(shift, (list, tuple)): shift = np.array(shift)
-        for node in self.node: node.pos += shift[0:2]
+        for node in self.node: node.pos += shift[:2]
         for col in self.column:
+            col.translate(shift[:2])
             if col.surface is not None:
                 col.surface += shift[2]
         for layer in self.layer: layer.translate(shift[2])
@@ -447,6 +464,9 @@ class mesh(object):
             c = np.array(centre)
         A, b = rotation(angle, c)
         for n in self.node: n.pos = np.dot(A, n.pos) + b
+        for col in self.column:
+            if col._centroid is not None:
+                col._centroid = np.dot(A, col._centroid) + b
 
     def find_layer(self, z):
         """Returns layer containing elevation z, or None if the point is
