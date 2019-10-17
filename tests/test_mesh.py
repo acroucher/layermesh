@@ -155,6 +155,12 @@ class meshTestCase(unittest.TestCase):
         c = m.find(p)
         self.assertIsNone(c)
 
+        c = m.find([5, 8], indices = True)
+        self.assertEqual(0, c)
+
+        l = m.find(-25, indices = True)
+        self.assertEqual(2, l)
+
         poly = [[8, -5], [11, 40], [20, 35], [40, 10], [20, -5]]
         cells = m.layer[-1].find(poly, indices = True)
         self.assertEqual(cells, [10, 13])
@@ -190,6 +196,13 @@ class meshTestCase(unittest.TestCase):
 
         cells = m.find(lambda c: not c.surface)
         self.assertEqual(len(cells), 9)
+
+        m.translate((100, 0, 10))
+        c = m.find([105, 8], indices = True)
+        self.assertEqual(0, c)
+
+        l = m.find(-15, indices = True)
+        self.assertEqual(2, l)
 
 if __name__ == '__main__':
 
