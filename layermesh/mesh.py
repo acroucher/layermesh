@@ -511,8 +511,20 @@ class mesh(object):
                 c = self.find_cell(match)
                 if c is None: return None
                 else: return c.index if indices else c
+            elif len(match) == 2:
+                c = self.find_column(match)
+                if c is None: return None
+                else: return c.index if indices else c
+            elif len(match) == 1:
+                l = self.find_layer(match[0])
+                if l is None: return None
+                else: return l.index if indices else l
             else:
-                raise Exception('Point to match is not of length 3.')
+                raise Exception('Point to match has length > 3.')
+        elif isinstance(match, (float, int)):
+            l = self.find_layer(match)
+            if l is None: return None
+            else: return l.index if indices else l
         else:
             cells = [c for c in self.cell if match(c)]
             if cells:
