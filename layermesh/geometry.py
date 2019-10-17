@@ -14,22 +14,25 @@ import numpy as np
 
 def in_polygon(pos, polygon):
     """Tests if the (2-D) point a lies within a given polygon."""
-    tolerance = 1.e-6
-    numcrossings = 0
-    pos = np.array(pos)
-    poly = [np.array(v, dtype = float) for v in polygon]
-    ref = poly[0]
-    v = pos - ref
-    for i in range(len(poly)):
-        p1 = poly[i] - ref
-        i2 = (i+1) % len(poly)
-        p2 = poly[i2] - ref
-        if p1[1] <= v[1] < p2[1] or p2[1] <= v[1] < p1[1]:
-            d = p2 - p1
-            if abs(d[1]) > tolerance:
-                x = p1[0] + (v[1] - p1[1]) * d[0] / d[1]
-                if v[0] < x: numcrossings += 1
-    return (numcrossings % 2)
+    if len(polygon) == 2:
+        return in_rectangle(pos, polygon)
+    else:
+        tolerance = 1.e-6
+        numcrossings = 0
+        pos = np.array(pos)
+        poly = [np.array(v, dtype = float) for v in polygon]
+        ref = poly[0]
+        v = pos - ref
+        for i in range(len(poly)):
+            p1 = poly[i] - ref
+            i2 = (i+1) % len(poly)
+            p2 = poly[i2] - ref
+            if p1[1] <= v[1] < p2[1] or p2[1] <= v[1] < p1[1]:
+                d = p2 - p1
+                if abs(d[1]) > tolerance:
+                    x = p1[0] + (v[1] - p1[1]) * d[0] / d[1]
+                    if v[0] < x: numcrossings += 1
+        return (numcrossings % 2)
 
 def in_rectangle(pos, rect):
     """Tests if the 2-D point lies in an axis-aligned rectangle, defined
