@@ -502,8 +502,11 @@ class mesh(object):
         and returning a Boolean, in which case a list of matching
         cells is returned. Alternatively it can be a 3-D point (tuple,
         list or numpy array), in which case the cell containing the
-        point is returned.  If indices is True, the cell
-        indices are returned rather than the cells themselves.
+        point is returned, or a 2-D point, in which case the column
+        containing the point is returned, or a 1-D point or scalar,
+        in which case the layer containing the elevation is returned.
+        If indices is True, the cell (or column or layer) indices are
+        returned rather than the cells, columns or layers themselves.
         """
 
         if isinstance(match, (tuple, list, np.ndarray)):
