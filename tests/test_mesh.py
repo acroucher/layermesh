@@ -197,6 +197,12 @@ class meshTestCase(unittest.TestCase):
         cells = m.find(lambda c: not c.surface)
         self.assertEqual(len(cells), 9)
 
+        rect = [(0,0), (30, 35)]
+        cells = m.cells_inside(rect)
+        self.assertEqual(len(cells), 10)
+        cells = m.cells_inside(rect, elevations = [-30, -20])
+        self.assertEqual(len(cells), 4)
+
         m.translate((100, 0, 10))
         c = m.find([105, 8], indices = True)
         self.assertEqual(0, c)

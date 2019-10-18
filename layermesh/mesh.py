@@ -533,3 +533,29 @@ class mesh(object):
             if cells:
                 return [c.index for c in cells] if indices else cells
             else: return []
+
+    def cells_inside(self, polygon, elevations = None, sort = True, indices = False):
+        """Returns a list of cells in the mesh with columns inside the
+        specified polygon. Specifying the elevations parameter as a two-element
+        list, tuple or array means only cells inside that elevation range are returned.
+        If sort is True, the returned cells are sorted by cell index. If indices is
+        True, cell indices are returned instead of cells."""
+
+        cols = [c.column for c in self.layer[-1].cells_inside(polygon)]
+        cells = []
+        if elevations is None:
+            for col in cols:
+                cells += col.cell
+        else:
+            for col in cols:
+                cells += [c for c in col.cell
+                          if elevations[0] <= c.layer.centre <= elevations[1]]
+        if cells:
+            if sort:
+                isort = np.argsort(np.array([c.index for c in cells]))
+                return [cells[i].index for i in isort] if indices \
+                    else [cells[i] for i in isort]
+            else:
+                return [c.index for c in cells] if indices else cells
+        else: return []
+
