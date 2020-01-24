@@ -1,2 +1,2 @@
-from .geometry import *
-from .mesh import *
+__all__ = ['geometry', 'mesh']
+from . import *
