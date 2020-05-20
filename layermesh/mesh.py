@@ -187,11 +187,13 @@ class layer(object):
             if cells:
                 return [c.index for c in cells] if indices else cells
             else: return []
-        else:
+        elif callable(match):
             cells = [c for c in self.cell if match(c)]
             if cells:
                 return [c.index for c in cells] if indices else cells
             else: return []
+        else:
+            raise Exception('Unrecognised match type.')
 
 class cell(object):
     """Mesh cell."""
