@@ -528,11 +528,13 @@ class mesh(object):
             l = self.find_layer(match)
             if l is None: return None
             else: return l.index if indices else l
-        else:
+        elif callable(match):
             cells = [c for c in self.cell if match(c)]
             if cells:
                 return [c.index for c in cells] if indices else cells
             else: return []
+        else:
+            raise Exception('Unrecognised match type.')
 
     def cells_inside(self, polygon, elevations = None, sort = True, indices = False):
         """Returns a list of cells in the mesh with columns inside the
