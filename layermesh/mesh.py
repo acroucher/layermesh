@@ -223,6 +223,11 @@ class cell(object):
         return self == self.column.cell[0]
     surface = property(get_surface)
 
+    def get_num_nodes(self):
+        """Returns number of nodes in the cell."""
+        return 2 * self.column.num_nodes
+    num_nodes = property(get_num_nodes)
+
 class mesh(object):
     """Layered computational mesh."""
 
