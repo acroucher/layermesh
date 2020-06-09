@@ -232,7 +232,7 @@ class mesh(object):
     """Layered computational mesh."""
 
     def __init__(self, filename = None, columns = None, layers = None,
-                 surface = None):
+                 surface = None, cells_type_sort = True):
         """Initialize layered mesh either from file or specified columns and
         layers."""
 
@@ -249,6 +249,7 @@ class mesh(object):
             if isinstance(surface, (dict, list, np.ndarray)):
                 self.set_column_surfaces(surface)
 
+        self.cells_type_sort = cells_type_sort
         self.setup()
 
     def __repr__(self):
@@ -335,6 +336,44 @@ class mesh(object):
         """Sets up cell properties of mesh, layers and columns."""
         self.cell = []
         for col in self.column: col.cell = []
+        if self.cells_type_sort:
+            self._setup_cells_type_sorted()
+        else:
+            self._setup_cells_type_unsorted()
+
+    def _setup_cells_type_sorted(self):
+        """Sets up cells, sorted by cell type."""
+        cells = {}
+        for lay in self.layer:
+            lay.cell = []
+            for col in lay.column:
+                c = cell(lay, col)
+                cell_type = cell.num_nodes
+                if cell_type not in cells: cells[cell_type] = []
+                cells[cell_type].append(c)
+                lay.cell.append(c)
+                col.cell.append(c)
+
+        cell_types = cells.keys()
+        if self.cells_type_sort == 'increasing':
+            cell_types = sorted(cell_types)
+        elif self.cells_type_sort in [True, 'decreasing']:
+            cell_types = sorted(cell_types, reverse = True)
+        elif isinstance(self.cells_type_sort, [list, tuple, np.ndarray]):
+            cell_types = self.cells_type_sort
+        else:
+            raise Exception('Unrecognised cell type sort: %s' % str(self.cells_type_sort))
+
+        index = 0
+        for cell_type in cell_types:
+            if cell_type in cells:
+                for c in cells[cell_type]:
+                    c.index = index
+                    self.cell.append(c)
+                    index += 1
+
+    def _setup_cells_type_unsorted(self):
+        """Sets up cells, not sorted by cell type."""
         index = 0
         for lay in self.layer:
             lay.cell = []
