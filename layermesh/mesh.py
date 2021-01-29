@@ -607,3 +607,47 @@ class mesh(object):
                 return [c.index for c in cells] if indices else cells
         else: return []
 
+    def layer_plot(self, **kwargs):
+        """Creates a 2-D Matplotlib plot of the mesh at a specified layer."""
+
+        import matplotlib.pyplot as plt
+        import matplotlib.collections as collections
+
+        if 'elevation' in kwargs:
+            z = kwargs['elevation']
+            lay = self.find(z)
+            if lay is None:
+                raise Exception('Elevation not found in layer_plot()')
+        else:
+            lay = kwargs.get('layer', self.layer[-1])
+            if isinstance(lay, layer):
+                if lay not in self.layer:
+                    raise Exception('Unknown layer in layer_plot()')
+            elif isinstance(lay, int):
+                try:
+                    lay = self.layer[lay]
+                except:
+                    raise Exception('Unknown layer in layer_plot()')
+
+        fig = kwargs.get('figure', plt.figure())
+        ax = fig.add_subplot(1, 1, 1)
+
+        linewidth = kwargs.get('linewidth', 0.2)
+        linecolour = kwargs.get('linecolour', 'black')
+
+        verts = []
+        for col in lay.column:
+            poslist = [tuple([p for p in n.pos])
+                                for n in col.node]
+            verts.append(tuple(poslist))
+
+        polys = collections.PolyCollection(verts,
+                                           linewidth = linewidth,
+                                           facecolors = [],
+                                           edgecolors = linecolour)
+        ax.add_collection(polys)
+
+        ax.set_aspect('equal')
+        ax.autoscale_view()
+
+        if 'figure' not in kwargs: plt.show()
