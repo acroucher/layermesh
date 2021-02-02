@@ -175,6 +175,9 @@ class meshTestCase(unittest.TestCase):
         c = m.find([5, 8], indices = True)
         self.assertEqual(0, c)
 
+        c = m.find([-10, -10])
+        self.assertIsNone(c)
+
         l = m.find(-25, indices = True)
         self.assertEqual(2, l)
 

@@ -566,7 +566,8 @@ class mesh(object):
     def find_column(self, pos):
         """Returns column containing point pos (list, tuple or numpy array of
         length 2), or None if pos is outside the mesh."""
-        return self.layer[-1].find(pos).column
+        c = self.layer[-1].find(pos)
+        return c if c is None else c.column
 
     def find_cell(self, pos):
         """Returns cell containing point pos (list, tuple or numpy array of
