@@ -102,6 +102,7 @@ def line_polygon_intersections(polygon, line, bound_line = (True,True),
     intersections between the line's start and end points.  If indices
     is True, also return polygon side indices of intersections.
     """
+    from numpy.linalg import LinAlgError
     crossings = []
     poly = [np.array(v, dtype = float) for v in polygon]
     line = [np.array(p) for p in line]
