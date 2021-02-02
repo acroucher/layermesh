@@ -637,10 +637,12 @@ class mesh(object):
 
         linewidth = kwargs.get('linewidth', 0.2)
         linecolour = kwargs.get('linecolour', 'black')
+        colourmap = kwargs.get('colourmap', None)
         polys = collections.PolyCollection(verts,
                                            linewidth = linewidth,
                                            facecolors = [],
-                                           edgecolors = linecolour)
+                                           edgecolors = linecolour,
+                                           cmap = colourmap)
 
         if 'axes' in kwargs: ax = kwargs['axes']
         else: fig, ax = plt.subplots()
