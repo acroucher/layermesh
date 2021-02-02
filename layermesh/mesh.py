@@ -846,3 +846,91 @@ class mesh(object):
                 value_label += ' (' + unit + ')'
             cbar.set_label(value_label)
 
+    def slice_plot(self, **kwargs):
+        """Creates a 2-D Matplotlib plot of the mesh through a specified
+        vertical slice."""
+
+        import matplotlib.pyplot as plt
+        import matplotlib.collections as collections
+
+        linespec = kwargs.get('line', 'x')
+        if linespec == 'x':
+            line = ([self.bounds[0][0], self.centre[1]],
+                    [self.bounds[1][0], self.centre[1]])
+        elif linespec == 'y':
+            line = ([self.centre[0], self.bounds[0][1]],
+                    [self.centre[0], self.bounds[1][1]])
+        elif isinstance(linespec, (float, int)):
+            # line through mesh centre at specified angle in degrees:
+            r = 0.5 * np.linalg.norm(self.bounds[1] - self.bounds[0])
+            from math import radians, cos, sin
+            theta = radians(linespec)
+            d = r * np.array([sin(theta), cos(theta)])
+            line = [self.centre - d, self.centre + d]
+        else: line = linespec
+
+        line = [np.array(p) for p in line]
+
+        if np.linalg.norm(line[1] - line[0]) > 0.0:
+
+            cells = []
+            verts = []
+            track = self.column_track(line)
+            for item in track:
+                col, points = item[0], item[1:]
+                inpoint = points[0]
+                if len(points) > 1: outpoint = points[1]
+                else: outpoint = inpoint
+                if linespec == 'x':
+                    din, dout = inpoint[0], outpoint[0]
+                    default_xlabel = 'x'
+                elif linespec == 'y':
+                    din, dout = inpoint[1], outpoint[1]
+                    default_xlabel = 'y'
+                else:
+                    din = np.linalg.norm(inpoint - line[0])
+                    dout = np.linalg.norm(outpoint - line[0])
+                    default_xlabel = 'distance'
+                dcol = 0.5 * (din + dout)
+                for c in col.cell:
+                    cells.append(c)
+                    verts.append(((din, c.layer.bottom),
+                                  (din, c.layer.top),
+                                  (dout, c.layer.top),
+                                  (dout, c.layer.bottom)))
+
+            linewidth = kwargs.get('linewidth', 0.2)
+            linecolour = kwargs.get('linecolour', 'black')
+            colourmap = kwargs.get('colourmap', None)
+            polys = collections.PolyCollection(verts,
+                                               linewidth = linewidth,
+                                               facecolors = [],
+                                               edgecolors = linecolour,
+                                               cmap = colourmap)
+
+            if 'axes' in kwargs: ax = kwargs['axes']
+            else: fig, ax = plt.subplots()
+
+            ax.add_collection(polys)
+
+            if 'values' in kwargs:
+                vals = kwargs['values']
+                if len(vals) >= self.num_cells:
+                    vals = np.array(kwargs['values'])
+                    indices = [c.index for c in cells]
+                    slice_vals = vals[indices]
+                    polys.set_array(slice_vals)
+                    self.plot_colourbar(ax, polys, kwargs)
+                else:
+                    raise Exception('Not enough values for mesh in slice_plot()')
+
+            ax.set_xlabel(kwargs.get('xlabel', default_xlabel))
+            ax.set_ylabel(kwargs.get('ylabel', 'z'))
+
+            ax.set_aspect(kwargs.get('aspect', 'auto'))
+            ax.autoscale_view()
+
+            if 'axes' not in kwargs: plt.show()
+
+        else:
+            raise Exception('Line of zero length in slice_plot()')
