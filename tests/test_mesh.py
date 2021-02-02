@@ -33,6 +33,16 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(m.volume, 6480)
         self.assertEqual(np.linalg.norm(m.centre - np.array([15., 18.])), 0.)
 
+        self.assertEqual([col.num_neighbours for col in m.column],
+                          [2, 3, 2, 3, 4, 3, 2, 3, 2])
+        def colnbrs(index):
+            n = [col.index for col in m.column[index].neighbour]
+            n.sort()
+            return n
+        self.assertEqual(colnbrs(0), [1, 3])
+        self.assertEqual(colnbrs(4), [1, 3, 5, 7])
+        self.assertEqual(colnbrs(7), [4, 6, 8])
+
     def test_surface(self):
 
         dx = [10.]*3; dy = [12.] * 3

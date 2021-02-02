@@ -32,6 +32,7 @@ class column(object):
         self.surface = surface
         self._centroid = None
         self._area = None
+        self.neighbour = set()
 
     def __repr__(self):
         return str(self.index)
@@ -44,6 +45,9 @@ class column(object):
 
     def get_num_cells(self): return len(self.cell)
     num_cells = property(get_num_cells)
+
+    def get_num_neighbours(self): return len(self.neighbour)
+    num_neighbours = property(get_num_neighbours)
 
     def get_polygon(self):
         """Returns polygon formed by column node positions."""
@@ -91,6 +95,21 @@ class column(object):
         """Translates column horizontally by the specified shift array."""
         if self._centroid is not None:
             self._centroid += np.array(shift)
+
+    def identify_neighbours(self):
+        """Identifies neighbouring columns, i.e. those sharing two nodes."""
+        shared = {}
+        col_dict = {}
+        for n in self.node:
+            for col in n.column:
+                if col.index in shared: shared[col.index] += 1
+                else:
+                    col_dict[col.index] = col
+                    shared[col.index] = 1
+        del shared[self.index]
+        self.neighbour = set([col_dict[index] for index in shared
+                              if shared[index] == 2])
+        for col in self.neighbour: col.neighbour.add(self)
 
 class layer(object):
     """Mesh layer."""
@@ -313,6 +332,7 @@ class mesh(object):
         self.column.append(col)
         for n in col.node:
             n.column.add(col)
+        col.identify_neighbours()
 
     def set_column_layers(self, col):
         """Populates list of layers for given column."""
