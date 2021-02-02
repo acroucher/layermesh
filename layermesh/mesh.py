@@ -629,16 +629,14 @@ class mesh(object):
                 except:
                     raise Exception('Unknown layer in layer_plot()')
 
-
-        linewidth = kwargs.get('linewidth', 0.2)
-        linecolour = kwargs.get('linecolour', 'black')
-
         verts = []
         for col in lay.column:
             poslist = [tuple([p for p in n.pos])
                                 for n in col.node]
             verts.append(tuple(poslist))
 
+        linewidth = kwargs.get('linewidth', 0.2)
+        linecolour = kwargs.get('linecolour', 'black')
         polys = collections.PolyCollection(verts,
                                            linewidth = linewidth,
                                            facecolors = [],
