@@ -243,6 +243,13 @@ class meshTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(t[0][1], np.array([0, 10])))
         self.assertTrue(np.allclose(t[0][2], np.array([10, 10])))
 
+        t = m.column_track(([-5, 35], [18, 35]))
+        self.assertEqual(track_indices(t), [3, 4])
+        self.assertTrue(np.allclose(t[0][1], np.array([0, 35])))
+        self.assertTrue(np.allclose(t[0][2], np.array([10, 35])))
+        self.assertTrue(np.allclose(t[-1][1], np.array([10, 35])))
+        self.assertTrue(np.allclose(t[-1][2], np.array([18, 35])))
+
         t = m.column_track(([5, 0], [5, 80]))
         self.assertEqual(track_indices(t), [0, 3, 6, 9])
         self.assertTrue(np.allclose(t[-1][1], np.array([5, 60])))
