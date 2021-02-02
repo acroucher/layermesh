@@ -644,7 +644,7 @@ class mesh(object):
 
         if 'values' in kwargs:
             vals = kwargs['values']
-            if len(vals) == self.num_cells:
+            if len(vals) >= self.num_cells:
                 vals = np.array(kwargs['values'])
                 indices = [c.index for c in lay.cell]
                 layer_vals = vals[indices]
