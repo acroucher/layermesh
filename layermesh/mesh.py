@@ -111,6 +111,22 @@ class column(object):
                               if shared[index] == 2])
         for col in self.neighbour: col.neighbour.add(self)
 
+    def get_side_neighbours(self):
+        """Returns a list of neighbouring columns corresponding to each column
+        side (None if the column side is on a boundary)."""
+        nbrs = []
+        for i, nodei in enumerate(self.node):
+            i1 = (i + 1) % self.num_nodes
+            side_nodes = set([nodei, self.node[i1]])
+            nbr = None
+            for col in self.neighbour:
+                if side_nodes < set(col.node):
+                    nbr = col
+                    break
+            nbrs.append(nbr)
+        return nbrs
+    side_neighbours = property(get_side_neighbours)
+
 class layer(object):
     """Mesh layer."""
 

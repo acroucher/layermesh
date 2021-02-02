@@ -43,6 +43,13 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(colnbrs(4), [1, 3, 5, 7])
         self.assertEqual(colnbrs(7), [4, 6, 8])
 
+        def col_sidenbrs(index):
+            return [None if col is None else col.index
+                 for col in m.column[index].side_neighbours]
+        self.assertEqual(col_sidenbrs(0), [None, 3, 1, None])
+        self.assertEqual(col_sidenbrs(5), [4, 8, None, 2])
+        self.assertEqual(col_sidenbrs(4), [3, 7, 5, 1])
+
     def test_surface(self):
 
         dx = [10.]*3; dy = [12.] * 3
