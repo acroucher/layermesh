@@ -642,6 +642,16 @@ class mesh(object):
                                            facecolors = [],
                                            edgecolors = linecolour)
 
+        if 'values' in kwargs:
+            vals = kwargs['values']
+            if len(vals) == self.num_cells:
+                vals = np.array(kwargs['values'])
+                indices = [c.index for c in lay.cell]
+                layer_vals = vals[indices]
+                polys.set_array(layer_vals)
+            else:
+                raise Exception('Wrong number of values for mesh in layer_plot()')
+
         if 'axes' in kwargs: ax = kwargs['axes']
         else: fig, ax = plt.subplots()
 
