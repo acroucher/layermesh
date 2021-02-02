@@ -230,6 +230,35 @@ class meshTestCase(unittest.TestCase):
         l = m.find(-15, indices = True)
         self.assertEqual(2, l)
 
+    def test_column_track(self):
+
+        dx = [10] * 3; dy = [20] * 4
+        dz = [10] * 4
+        m = mesh.mesh(columns = [dx, dy], layers = dz)
+
+        def track_indices(t): return [item[0].index for item in t]
+
+        t = m.column_track(([0, 10], [30, 10]))
+        self.assertEqual(track_indices(t), [0, 1, 2])
+        self.assertTrue(np.allclose(t[0][1], np.array([0, 10])))
+        self.assertTrue(np.allclose(t[0][2], np.array([10, 10])))
+
+        t = m.column_track(([5, 0], [5, 80]))
+        self.assertEqual(track_indices(t), [0, 3, 6, 9])
+        self.assertTrue(np.allclose(t[-1][1], np.array([5, 60])))
+        self.assertTrue(np.allclose(t[-1][2], np.array([5, 80])))
+
+        t = m.column_track(([0, 0], [30, 80]))
+        self.assertEqual(track_indices(t), [0, 3, 4, 7, 8, 11])
+        self.assertTrue(np.allclose(t[0][1], np.array([0, 00])))
+        self.assertTrue(np.allclose(t[-1][2], np.array([30, 80])))
+
+        t = m.column_track(([29, 1], [3, 71.5]))
+        self.assertEqual(track_indices(t), [2, 5, 4, 7, 6, 9])
+
+        t = m.column_track(([-2, 3.5], [40, 15]))
+        self.assertEqual(track_indices(t), [0, 1, 2])
+
 if __name__ == '__main__':
 
     suite = unittest.TestLoader().loadTestsFromTestCase(meshTestCase)

@@ -644,6 +644,134 @@ class mesh(object):
                 return [c.index for c in cells] if indices else cells
         else: return []
 
+    def column_track(self, line):
+        """Returns a list of tuples of (column, entry_point, exit_point)
+        representing the horizontal track traversed by the specified
+        line through the grid.  Line is a tuple of two 2D arrays.  The
+        resulting list is ordered by distance from the start of the
+        line. Adapted from the PyTOUGH mulgrid column_track()
+        method."""
+
+        def furthest_intersection(poly, line):
+            """Returns furthest intersection point between line and poly."""
+            from layermesh.geometry import line_polygon_intersections
+            pts, inds = line_polygon_intersections(poly, line,
+                                                   bound_line = (True, False),
+                                                   indices = True)
+            if pts:
+                d = np.array([np.linalg.norm(intpt - line[0]) for intpt in pts])
+                i = np.argmax(d)
+                return pts[i], inds[i]
+            else: return None, None
+
+        def find_track_start(line):
+            """Finds starting point for track- an arbitrary point on the line that
+            is inside the grid.  If the start point of the line is
+            inside the grid, that is used; otherwise, a recursive
+            bisection technique is used to find a point."""
+
+            col, start_type = None, None
+            for endpt, name in zip(line, ['start', 'end']):
+                pos, col, start_type = endpt, self.find(endpt), name
+                if col: break
+            if not col: # line ends are both outside the grid:
+                start_type = 'mid'
+                max_levels = 7
+
+                def find_start(line, level = 0):
+                    midpt = 0.5 * (line[0] + line[1])
+                    col = self.find(midpt)
+                    if col: return midpt, col
+                    else:
+                        if level <= max_levels:
+                            line0, line1 = [line[0], midpt], [midpt, line[1]]
+                            pos, col = find_start(line0, level + 1)
+                            if col: return pos, col
+                            else:
+                                pos, col = find_start(line1, level + 1)
+                                if col: return pos, col
+                                else: return None, None
+                        else: return None, None
+
+                pos, col = find_start(line)
+            return pos, col, start_type
+
+        def next_corner_column(col, pos, more, cols):
+            """If the line has hit a node, determine a new column containing that
+            node, not already visited."""
+
+            node_tol = 1.e-12
+            nextcol = None
+            nearnodes = [n for n in col.node if np.linalg.norm(n.pos - pos) < node_tol]
+            if nearnodes: # hit a node
+                nearnode = nearnodes[0]
+                nearcols = nearnode.column - cols
+                if nearcols: nextcol = nearcols.pop()
+                else: more = False
+            return nextcol, more
+
+        def next_neighbour_column(col, more, cols):
+            """Determine a new neighbour column not already visited."""
+
+            nbrs = col.neighbour - cols
+            if nbrs: return nbrs.pop(), more
+            else: return None, False
+
+        def find_track_segment(linesegment, pos, col):
+            """Finds track segment starting from the specified position and
+            column."""
+            track = []
+            cols, more, inpos = set(), True, pos
+            colnbr, nextcol = col.side_neighbours, None
+            lined = np.linalg.norm(linesegment[1] - linesegment[0])
+            while more:
+                cols.add(col)
+                outpos, ind = furthest_intersection(col.polygon, linesegment)
+                if outpos is not None:
+                    d = np.linalg.norm(outpos - linesegment[0])
+                    if d >= lined: # gone past end of line
+                        outpos = linesegment[1]
+                        more = False
+                    if np.linalg.norm(outpos - inpos) > 0.:
+                        track.append(tuple([col, inpos, outpos]))
+                    if more: # find next column
+                        inpos = outpos
+                        nextcol = colnbr[ind]
+                        if nextcol:
+                            if nextcol in cols:
+                                nextcol, more = next_corner_column(col, outpos, more, cols)
+                                if nextcol is None:
+                                    nextcol, more = next_neighbour_column(col, more, cols)
+                                    nbr_base_col = col
+                        else: nextcol, more = next_corner_column(col, outpos, more, cols)
+                else:
+                    nextcol, more = next_neighbour_column(nbr_base_col, more, cols)
+                col = nextcol
+                if col: colnbr = col.side_neighbours
+                else: more = False
+
+            return track
+
+        def reverse_track(track):
+            return [tuple([tk[0], tk[2], tk[1]]) for tk in track][::-1]
+
+        line = [np.array(p) for p in line]
+        pos, col, start_type = find_track_start(line)
+        if pos is not None and col:
+            if start_type == 'start':
+                track = find_track_segment(line, pos, col)
+            elif start_type == 'end':
+                track = find_track_segment(line[::-1], pos, col)
+                track = reverse_track(track)
+            else:
+                track1 = find_track_segment([pos, line[0]], pos, col)
+                track2 = find_track_segment([pos, line[1]], pos, col)
+                # remove arbitrary starting point from middle of track, and join:
+                midtk = tuple([track1[0][0], track1[0][2], track2[0][2]])
+                track = reverse_track(track1)[:-1] + [midtk] + track2[1:]
+            return track
+        else: return []
+
     def layer_plot(self, **kwargs):
         """Creates a 2-D Matplotlib plot of the mesh at a specified layer."""
 
