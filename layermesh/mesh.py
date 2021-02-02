@@ -650,12 +650,12 @@ class mesh(object):
                 layer_vals = vals[indices]
                 polys.set_array(layer_vals)
             else:
-                raise Exception('Wrong number of values for mesh in layer_plot()')
 
         if 'axes' in kwargs: ax = kwargs['axes']
         else: fig, ax = plt.subplots()
 
         ax.add_collection(polys)
+                raise Exception('Not enough values for mesh in layer_plot()')
 
         ax.set_xlabel(kwargs.get('xlabel', 'x'))
         ax.set_ylabel(kwargs.get('ylabel', 'y'))
