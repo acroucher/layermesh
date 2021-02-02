@@ -629,8 +629,6 @@ class mesh(object):
                 except:
                     raise Exception('Unknown layer in layer_plot()')
 
-        fig = kwargs.get('figure', plt.figure())
-        ax = fig.add_subplot(1, 1, 1)
 
         linewidth = kwargs.get('linewidth', 0.2)
         linecolour = kwargs.get('linecolour', 'black')
@@ -645,9 +643,13 @@ class mesh(object):
                                            linewidth = linewidth,
                                            facecolors = [],
                                            edgecolors = linecolour)
+
+        if 'axes' in kwargs: ax = kwargs['axes']
+        else: fig, ax = plt.subplots()
+
         ax.add_collection(polys)
 
         ax.set_aspect('equal')
         ax.autoscale_view()
 
-        if 'figure' not in kwargs: plt.show()
+        if 'axes' not in kwargs: plt.show()
