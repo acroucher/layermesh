@@ -647,7 +647,10 @@ class mesh(object):
 
         ax.add_collection(polys)
 
-        ax.set_aspect('equal')
+        ax.set_xlabel(kwargs.get('xlabel', 'x'))
+        ax.set_ylabel(kwargs.get('ylabel', 'y'))
+
+        ax.set_aspect(kwargs.get('aspect', 'equal'))
         ax.autoscale_view()
 
         if 'axes' not in kwargs: plt.show()
