@@ -642,6 +642,11 @@ class mesh(object):
                                            facecolors = [],
                                            edgecolors = linecolour)
 
+        if 'axes' in kwargs: ax = kwargs['axes']
+        else: fig, ax = plt.subplots()
+
+        ax.add_collection(polys)
+
         if 'values' in kwargs:
             vals = kwargs['values']
             if len(vals) >= self.num_cells:
@@ -649,12 +654,8 @@ class mesh(object):
                 indices = [c.index for c in lay.cell]
                 layer_vals = vals[indices]
                 polys.set_array(layer_vals)
+                self.plot_colourbar(ax, polys, kwargs)
             else:
-
-        if 'axes' in kwargs: ax = kwargs['axes']
-        else: fig, ax = plt.subplots()
-
-        ax.add_collection(polys)
                 raise Exception('Not enough values for mesh in layer_plot()')
 
         ax.set_xlabel(kwargs.get('xlabel', 'x'))
