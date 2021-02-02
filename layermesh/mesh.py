@@ -664,3 +664,17 @@ class mesh(object):
         ax.autoscale_view()
 
         if 'axes' not in kwargs: plt.show()
+
+    def plot_colourbar(self, ax, polys, kwargs):
+        """Adds colour bar to Matplotlib plot on specified axes."""
+
+        import matplotlib.pyplot as plt
+
+        cbar = plt.colorbar(polys, ax = ax)
+        if 'value_label' in kwargs:
+            value_label = kwargs.get('value_label')
+            if 'value_unit' in kwargs:
+                unit = kwargs.get('value_unit')
+                value_label += ' (' + unit + ')'
+            cbar.set_label(value_label)
+
