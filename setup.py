@@ -13,5 +13,5 @@ setup(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
         "Operating System :: OS Independent"],
-    install_requires=['numpy']
+    install_requires=['numpy', 'h5py', 'meshio']
 )
