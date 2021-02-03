@@ -497,18 +497,21 @@ class mesh(object):
         import h5py
         with h5py.File(filename, 'w') as f:
             if self.node:
-                nodes = np.array([n.pos for n in self.node])
-                f.create_dataset('nodes', data = nodes)
+                pos = np.array([n.pos for n in self.node])
+                node_group = f.create_group('node')
+                node_group.create_dataset('position', data = pos)
                 if self.column:
-                    columns = np.array([[n.index for n in col.node]
-                                        for col in self.column])
-                    f.create_dataset('columns', data = columns)
+                    col_node_indices = np.array([[n.index for n in col.node]
+                                                 for col in self.column])
+                    col_group = f.create_group('column')
+                    col_group.create_dataset('node', data = col_node_indices)
                     surface = np.array([col.surface for col in self.column])
-                    f.create_dataset('surface', data = surface)
+                    col_group.create_dataset('surface', data = surface)
             if self.layer:
-                layers = [self.layer[0].top] + \
+                layer_elev = [self.layer[0].top] + \
                          [lay.bottom for lay in self.layer]
-                f.create_dataset('layers', data = layers)
+                lay_group = f.create_group('layer')
+                lay_group.create_dataset('elevation', data = layer_elev)
 
     def read(self, filename):
         """Reads mesh from HDF5 file."""
@@ -517,22 +520,28 @@ class mesh(object):
         self.column = []
         self.layer = []
         with h5py.File(filename, 'r') as f:
-            if 'nodes' in f:
-                index = 0
-                for p in np.array(f['nodes']):
-                    n = node(pos = p, index = index)
-                    self.add_node(n); index += 1
-                index = 0
-                if 'columns' in f:
-                    for column_node_indices in np.array(f['columns']):
-                        column_nodes = [self.node[i]
-                                        for i in column_node_indices]
-                        col = column(node = column_nodes, index = index)
-                        self.add_column(col); index += 1
-                    if 'surface' in f:
-                        self.set_column_surfaces(np.array(f['surface']))
-            if 'layers' in f:
-                self.set_layers(np.array(f['layers']))
+            if 'node' in f:
+                node_group = f['node']
+                if 'position' in node_group:
+                    index = 0
+                    for p in np.array(node_group['position']):
+                        n = node(pos = p, index = index)
+                        self.add_node(n); index += 1
+                    index = 0
+                    if 'column' in f:
+                        col_group = f['column']
+                        if 'node' in col_group:
+                            for col_node_indices in np.array(col_group['node']):
+                                col_nodes = [self.node[i]
+                                             for i in col_node_indices]
+                                col = column(node = col_nodes, index = index)
+                                self.add_column(col); index += 1
+                            if 'surface' in col_group:
+                                s = np.array(col_group['surface'])
+                                self.set_column_surfaces(s)
+            if 'layer' in f:
+                lay_group = f['layer']
+                self.set_layers(np.array(lay_group['elevation']))
 
     def get_meshio_points_cells(self):
         """Returns lists of 3-D points and cells suitable for mesh
