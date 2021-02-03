@@ -798,6 +798,7 @@ class mesh(object):
                     raise Exception('Unknown layer in layer_plot()')
 
         labels = kwargs.get('labels', None)
+        label_colour = kwargs.get('label_colour', 'black')
         verts = []
         for c in lay.cell:
             col = c.column
@@ -811,7 +812,8 @@ class mesh(object):
             else: col_label = None
             if col_label:
                 ax.text(col.centre[0], col.centre[1], col_label,
-                        clip_on = True, horizontalalignment = 'center')
+                        clip_on = True, horizontalalignment = 'center',
+                        color = label_colour)
 
         linewidth = kwargs.get('linewidth', 0.2)
         linecolour = kwargs.get('linecolour', 'black')
@@ -836,7 +838,8 @@ class mesh(object):
                         col = c.column
                         col_label = str(vals[c.index])
                         ax.text(col.centre[0], col.centre[1], col_label,
-                                clip_on = True, horizontalalignment = 'center')
+                                clip_on = True, horizontalalignment = 'center',
+                                color = label_colour)
             else:
                 raise Exception('Not enough values for mesh in layer_plot()')
 
@@ -892,6 +895,7 @@ class mesh(object):
         if np.linalg.norm(line[1] - line[0]) > 0.0:
 
             labels = kwargs.get('labels', None)
+            label_colour = kwargs.get('label_colour', 'black')
             slice_cells = []
             verts = []
             dcol = {}
@@ -923,7 +927,8 @@ class mesh(object):
                     else: cell_label = None
                     if cell_label:
                         ax.text(dcol[col.index], c.layer.centre, cell_label,
-                            clip_on = True, horizontalalignment = 'center')
+                                clip_on = True, horizontalalignment = 'center',
+                                color = label_colour)
 
             linewidth = kwargs.get('linewidth', 0.2)
             linecolour = kwargs.get('linecolour', 'black')
@@ -948,7 +953,8 @@ class mesh(object):
                             col = c.column
                             cell_label = str(vals[c.index])
                             ax.text(dcol[col.index], c.layer.centre, cell_label,
-                                    clip_on = True, horizontalalignment = 'center')
+                                    clip_on = True, horizontalalignment = 'center',
+                                    color = label_colour)
                 else:
                     raise Exception('Not enough values for mesh in slice_plot()')
 
