@@ -278,7 +278,9 @@ class mesh(object):
                 raise Exception("Unrecognized columns parameter.")
 
         if layers is not None:
-            self.set_layers(layers)
+            elevations = np.hstack((np.zeros(1),
+                                   -np.cumsum(np.array(layers))))
+            self.set_layers(elevations)
 
         if surface is not None:
             if isinstance(surface, (dict, list, np.ndarray)):
@@ -454,16 +456,15 @@ class mesh(object):
                 self.add_column(col)
                 index += 1
 
-    def set_layers(self, spacings):
-        """Sets mesh layers according to specified vertical layer spacings,
-        from the top down."""
+    def set_layers(self, elevations):
+        """Sets mesh layers according to specified vertical layer boundary
+        elevations, from the top down. """
 
         self.layer = []
-        z = 0.
         index = 0
-        for thickness in spacings:
-            top = z
-            z -= thickness
+        bottom = elevations[0]
+        for z in elevations[1:]:
+            top = bottom
             bottom = z
             lay = layer(bottom, top, index)
             self.add_layer(lay)
