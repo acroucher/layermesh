@@ -798,6 +798,7 @@ class mesh(object):
                     raise Exception('Unknown layer in layer_plot()')
 
         labels = kwargs.get('labels', None)
+        label_fmt = kwargs.get('label_format', '%g')
         label_colour = kwargs.get('label_colour', 'black')
         verts = []
         for c in lay.cell:
@@ -806,9 +807,9 @@ class mesh(object):
                                 for n in col.node]
             verts.append(tuple(poslist))
             if labels == 'column':
-                col_label = str(col.index)
+                col_label = label_fmt % col.index
             elif labels == 'cell':
-                col_label = str(c.index)
+                col_label = label_fmt % c.index
             else: col_label = None
             if col_label:
                 ax.text(col.centre[0], col.centre[1], col_label,
@@ -836,7 +837,7 @@ class mesh(object):
                 if labels == 'value':
                     for c in lay.cell:
                         col = c.column
-                        col_label = str(vals[c.index])
+                        col_label = label_fmt % vals[c.index]
                         ax.text(col.centre[0], col.centre[1], col_label,
                                 clip_on = True, horizontalalignment = 'center',
                                 color = label_colour)
@@ -895,6 +896,7 @@ class mesh(object):
         if np.linalg.norm(line[1] - line[0]) > 0.0:
 
             labels = kwargs.get('labels', None)
+            label_fmt = kwargs.get('label_format', '%g')
             label_colour = kwargs.get('label_colour', 'black')
             slice_cells = []
             verts = []
@@ -923,7 +925,7 @@ class mesh(object):
                                   (dout, c.layer.top),
                                   (dout, c.layer.bottom)))
                     if labels == 'cell':
-                        cell_label = str(c.index)
+                        cell_label = label_fmt % c.index
                     else: cell_label = None
                     if cell_label:
                         ax.text(dcol[col.index], c.layer.centre, cell_label,
@@ -951,7 +953,7 @@ class mesh(object):
                     if labels == 'value':
                         for c in slice_cells:
                             col = c.column
-                            cell_label = str(vals[c.index])
+                            cell_label = label_fmt % vals[c.index]
                             ax.text(dcol[col.index], c.layer.centre, cell_label,
                                     clip_on = True, horizontalalignment = 'center',
                                     color = label_colour)
