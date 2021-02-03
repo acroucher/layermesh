@@ -271,20 +271,21 @@ class mesh(object):
         """Initialize layered mesh either from file or specified columns and
         layers."""
 
-        if columns is not None:
-            if isinstance(columns, (list, tuple)) and len(columns) == 2:
-                self.set_rectangular_columns(columns)
-            else:
-                raise Exception("Unrecognized columns parameter.")
-
-        if layers is not None:
-            elevations = np.hstack((np.zeros(1),
-                                   -np.cumsum(np.array(layers))))
-            self.set_layers(elevations)
-
-        if surface is not None:
-            if isinstance(surface, (dict, list, np.ndarray)):
-                self.set_column_surfaces(surface)
+        if filename is None:
+            if columns is not None:
+                if isinstance(columns, (list, tuple)) and len(columns) == 2:
+                    self.set_rectangular_columns(columns)
+                else:
+                    raise Exception("Unrecognized columns parameter.")
+            if layers is not None:
+                elevations = np.hstack((np.zeros(1),
+                                       -np.cumsum(np.array(layers))))
+                self.set_layers(elevations)
+            if surface is not None:
+                if isinstance(surface, (dict, list, np.ndarray)):
+                    self.set_column_surfaces(surface)
+        else:
+            self.read(filename)
 
         self.cells_type_sort = cells_type_sort
         self.setup()
@@ -490,6 +491,48 @@ class mesh(object):
                  raise Exception('Surface list or array is the wrong size.')
         else:
             raise Exception('Unrecognized surface parameter type.')
+
+    def write(self, filename):
+        """Writes mesh to HDF5 file."""
+        import h5py
+        with h5py.File(filename, 'w') as f:
+            if self.node:
+                nodes = np.array([n.pos for n in self.node])
+                f.create_dataset('nodes', data = nodes)
+                if self.column:
+                    columns = np.array([[n.index for n in col.node]
+                                        for col in self.column])
+                    f.create_dataset('columns', data = columns)
+                    surface = np.array([col.surface for col in self.column])
+                    f.create_dataset('surface', data = surface)
+            if self.layer:
+                layers = [self.layer[0].top] + \
+                         [lay.bottom for lay in self.layer]
+                f.create_dataset('layers', data = layers)
+
+    def read(self, filename):
+        """Reads mesh from HDF5 file."""
+        import h5py
+        self.node = []
+        self.column = []
+        self.layer = []
+        with h5py.File(filename, 'r') as f:
+            if 'nodes' in f:
+                index = 0
+                for p in np.array(f['nodes']):
+                    n = node(pos = p, index = index)
+                    self.add_node(n); index += 1
+                index = 0
+                if 'columns' in f:
+                    for column_node_indices in np.array(f['columns']):
+                        column_nodes = [self.node[i]
+                                        for i in column_node_indices]
+                        col = column(node = column_nodes, index = index)
+                        self.add_column(col); index += 1
+                    if 'surface' in f:
+                        self.set_column_surfaces(np.array(f['surface']))
+            if 'layers' in f:
+                self.set_layers(np.array(f['layers']))
 
     def get_meshio_points_cells(self):
         """Returns lists of 3-D points and cells suitable for mesh
