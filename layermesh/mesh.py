@@ -778,6 +778,9 @@ class mesh(object):
         import matplotlib.pyplot as plt
         import matplotlib.collections as collections
 
+        if 'axes' in kwargs: ax = kwargs['axes']
+        else: fig, ax = plt.subplots()
+
         if 'elevation' in kwargs:
             z = kwargs['elevation']
             lay = self.find(z)
@@ -794,11 +797,21 @@ class mesh(object):
                 except:
                     raise Exception('Unknown layer in layer_plot()')
 
+        labels = kwargs.get('labels', None)
         verts = []
-        for col in lay.column:
+        for c in lay.cell:
+            col = c.column
             poslist = [tuple([p for p in n.pos])
                                 for n in col.node]
             verts.append(tuple(poslist))
+            if labels == 'column':
+                col_label = str(col.index)
+            elif labels == 'cell':
+                col_label = str(c.index)
+            else: col_label = None
+            if col_label:
+                ax.text(col.centre[0], col.centre[1], col_label,
+                        clip_on = True, horizontalalignment = 'center')
 
         linewidth = kwargs.get('linewidth', 0.2)
         linecolour = kwargs.get('linecolour', 'black')
@@ -808,10 +821,6 @@ class mesh(object):
                                            facecolors = [],
                                            edgecolors = linecolour,
                                            cmap = colourmap)
-
-        if 'axes' in kwargs: ax = kwargs['axes']
-        else: fig, ax = plt.subplots()
-
         ax.add_collection(polys)
 
         if 'values' in kwargs:
@@ -822,6 +831,12 @@ class mesh(object):
                 layer_vals = vals[indices]
                 polys.set_array(layer_vals)
                 self.plot_colourbar(ax, polys, kwargs)
+                if labels == 'value':
+                    for c in lay.cell:
+                        col = c.column
+                        col_label = str(vals[c.index])
+                        ax.text(col.centre[0], col.centre[1], col_label,
+                                clip_on = True, horizontalalignment = 'center')
             else:
                 raise Exception('Not enough values for mesh in layer_plot()')
 
@@ -853,6 +868,9 @@ class mesh(object):
         import matplotlib.pyplot as plt
         import matplotlib.collections as collections
 
+        if 'axes' in kwargs: ax = kwargs['axes']
+        else: fig, ax = plt.subplots()
+
         linespec = kwargs.get('line', 'x')
         if linespec == 'x':
             line = ([self.bounds[0][0], self.centre[1]],
@@ -873,8 +891,10 @@ class mesh(object):
 
         if np.linalg.norm(line[1] - line[0]) > 0.0:
 
-            cells = []
+            labels = kwargs.get('labels', None)
+            slice_cells = []
             verts = []
+            dcol = {}
             track = self.column_track(line)
             for item in track:
                 col, points = item[0], item[1:]
@@ -891,13 +911,19 @@ class mesh(object):
                     din = np.linalg.norm(inpoint - line[0])
                     dout = np.linalg.norm(outpoint - line[0])
                     default_xlabel = 'distance'
-                dcol = 0.5 * (din + dout)
+                dcol[col.index] = 0.5 * (din + dout)
                 for c in col.cell:
-                    cells.append(c)
+                    slice_cells.append(c)
                     verts.append(((din, c.layer.bottom),
                                   (din, c.layer.top),
                                   (dout, c.layer.top),
                                   (dout, c.layer.bottom)))
+                    if labels == 'cell':
+                        cell_label = str(c.index)
+                    else: cell_label = None
+                    if cell_label:
+                        ax.text(dcol[col.index], c.layer.centre, cell_label,
+                            clip_on = True, horizontalalignment = 'center')
 
             linewidth = kwargs.get('linewidth', 0.2)
             linecolour = kwargs.get('linecolour', 'black')
@@ -907,20 +933,22 @@ class mesh(object):
                                                facecolors = [],
                                                edgecolors = linecolour,
                                                cmap = colourmap)
-
-            if 'axes' in kwargs: ax = kwargs['axes']
-            else: fig, ax = plt.subplots()
-
             ax.add_collection(polys)
 
             if 'values' in kwargs:
                 vals = kwargs['values']
                 if len(vals) >= self.num_cells:
                     vals = np.array(kwargs['values'])
-                    indices = [c.index for c in cells]
+                    indices = [c.index for c in slice_cells]
                     slice_vals = vals[indices]
                     polys.set_array(slice_vals)
                     self.plot_colourbar(ax, polys, kwargs)
+                    if labels == 'value':
+                        for c in slice_cells:
+                            col = c.column
+                            cell_label = str(vals[c.index])
+                            ax.text(dcol[col.index], c.layer.centre, cell_label,
+                                    clip_on = True, horizontalalignment = 'center')
                 else:
                     raise Exception('Not enough values for mesh in slice_plot()')
 
