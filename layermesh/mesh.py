@@ -288,6 +288,8 @@ class mesh(object):
         """Initialize layered mesh either from file or via other
         parameters."""
 
+        self.empty()
+
         if filename is not None: self.read(filename)
         else:
 
@@ -308,6 +310,13 @@ class mesh(object):
     def __repr__(self):
         return '%d columns, %d layers, %d cells' % \
             (self.num_columns, self.num_layers, self.num_cells)
+
+    def empty(self):
+        """Empties data arrays."""
+        self.node = []
+        self.column = []
+        self.layer = []
+        self.cell = []
 
     def get_num_nodes(self):
         """Returns number of 2-D nodes in mesh."""
@@ -560,9 +569,7 @@ class mesh(object):
     def read(self, filename):
         """Reads mesh from HDF5 file."""
         import h5py
-        self.node = []
-        self.column = []
-        self.layer = []
+        self.empty()
         with h5py.File(filename, 'r') as f:
             if 'layer' in f:
                 lay_group = f['layer']
