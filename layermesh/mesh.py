@@ -630,6 +630,14 @@ class mesh(object):
 
     meshio_points_cells = property(get_meshio_points_cells)
 
+    def export(self, filename, fmt = None):
+        """Exports 3-D mesh using meshio, to file with the specified name. If
+        the format is not specified via the fmt parameter, it is determined
+        from the filename extension."""
+        import meshio
+        points, cells = self.meshio_points_cells
+        meshio.write_points_cells(filename, points, cells, file_format = fmt)
+
     def get_surface_cells(self):
         """Returns cells at mesh surface."""
         return [col.cell[0] for col in self.column]
