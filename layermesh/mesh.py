@@ -897,7 +897,7 @@ class mesh(object):
                 except:
                     raise Exception('Unknown layer in layer_plot()')
 
-        labels = kwargs.get('labels', None)
+        labels = kwargs.get('label', None)
         label_fmt = kwargs.get('label_format', '%g')
         label_colour = kwargs.get('label_colour', 'black')
         verts = []
@@ -926,10 +926,10 @@ class mesh(object):
                                            cmap = colourmap)
         ax.add_collection(polys)
 
-        if 'values' in kwargs:
-            vals = kwargs['values']
+        if 'value' in kwargs:
+            vals = kwargs['value']
             if len(vals) >= self.num_cells:
-                vals = np.array(kwargs['values'])
+                vals = np.array(kwargs['value'])
                 indices = [c.index for c in lay.cell]
                 layer_vals = vals[indices]
                 polys.set_array(layer_vals)
@@ -997,7 +997,7 @@ class mesh(object):
 
         if np.linalg.norm(l[1] - l[0]) > 0.0:
 
-            labels = kwargs.get('labels', None)
+            labels = kwargs.get('label', None)
             label_fmt = kwargs.get('label_format', '%g')
             label_colour = kwargs.get('label_colour', 'black')
             slice_cells = []
@@ -1044,10 +1044,10 @@ class mesh(object):
                                                cmap = colourmap)
             ax.add_collection(polys)
 
-            if 'values' in kwargs:
-                vals = kwargs['values']
+            if 'value' in kwargs:
+                vals = kwargs['value']
                 if len(vals) >= self.num_cells:
-                    vals = np.array(kwargs['values'])
+                    vals = np.array(kwargs['value'])
                     indices = [c.index for c in slice_cells]
                     slice_vals = vals[indices]
                     polys.set_array(slice_vals)
