@@ -12,6 +12,8 @@ You should have received a copy of the GNU Lesser General Public License along w
 
 import numpy as np
 
+default_cell_type_sort = -1 # decreasing
+
 class node(object):
     """2-D mesh node."""
 
@@ -309,6 +311,7 @@ class mesh(object):
 
     def empty(self):
         """Empties data arrays."""
+        self.cell_type_sort = default_cell_type_sort
         self.node = []
         self.column = []
         self.layer = []
@@ -407,12 +410,10 @@ class mesh(object):
                 col.cell.append(c)
 
         cell_types = cells.keys()
-        if self.cells_type_sort == 'increasing':
+        if self.cell_type_sort > 0:
             cell_types = sorted(cell_types)
-        elif self.cells_type_sort in [True, 'decreasing']:
+        elif self.cell_type_sort < 0:
             cell_types = sorted(cell_types, reverse = True)
-        elif isinstance(self.cells_type_sort, [list, tuple, np.ndarray]):
-            cell_types = self.cells_type_sort
         else:
             raise Exception('Unrecognised cell type sort: %s' % str(self.cell_type_sort))
 
