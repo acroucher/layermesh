@@ -971,14 +971,17 @@ class mesh(object):
 
         linespec = kwargs.get('line', 'x')
         if linespec == 'x':
-            line = ([self.bounds[0][0], self.centre[1]],
-                    [self.bounds[1][0], self.centre[1]])
+            bounds = self.bounds
+            line = ([bounds[0][0], self.centre[1]],
+                    [bounds[1][0], self.centre[1]])
         elif linespec == 'y':
-            line = ([self.centre[0], self.bounds[0][1]],
-                    [self.centre[0], self.bounds[1][1]])
+            bounds = self.bounds
+            line = ([self.centre[0], bounds[0][1]],
+                    [self.centre[0], bounds[1][1]])
         elif isinstance(linespec, (float, int)):
             # line through mesh centre at specified angle in degrees:
-            r = 0.5 * np.linalg.norm(self.bounds[1] - self.bounds[0])
+            bounds = self.bounds
+            r = 0.5 * np.linalg.norm(bounds[1] - bounds[0])
             from math import radians, cos, sin
             theta = radians(linespec)
             d = r * np.array([sin(theta), cos(theta)])
