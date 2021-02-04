@@ -26,10 +26,9 @@ class node(object):
 class column(object):
     """Mesh column."""
 
-    def __init__(self, node, index = None, surface = None):
+    def __init__(self, node, index = None):
         self.node = node
         self.index = index
-        self.surface = surface
         self._centroid = None
         self._area = None
         self.neighbour = set()
@@ -75,6 +74,24 @@ class column(object):
         """Returns column volume."""
         return self.area * sum([lay.thickness for lay in self.layer])
     volume = property(get_volume)
+
+    def set_layers(self, layers, num_layers):
+        """Sets column layers to be the last num_layers layers from the
+        specified list."""
+        istart = len(layers) - num_layers
+        self.layer = layers[istart:]
+
+    def set_surface(self, layers, surface = None):
+        """Sets column layers from specified surface elevation."""
+        if surface is None: self.layer = layers
+        else:
+            self.layer = [lay for lay in layers
+                          if lay.centre <= surface]
+
+    def get_surface(self):
+        """Returns surface elevation of column."""
+        return self.layer[0].top
+    surface = property(get_surface)
 
     def contains(self, pos):
         """Returns True if the column contains the 2-D point pos (tuple, list or
@@ -272,18 +289,16 @@ class mesh(object):
         layers."""
 
         if filename is None:
+            if layers is not None:
+                elevations = np.hstack((np.zeros(1),
+                                       -np.cumsum(np.array(layers))))
+                self.set_layers(elevations)
             if columns is not None:
                 if isinstance(columns, (list, tuple)) and len(columns) == 2:
                     self.set_rectangular_columns(columns)
                 else:
                     raise Exception("Unrecognized columns parameter.")
-            if layers is not None:
-                elevations = np.hstack((np.zeros(1),
-                                       -np.cumsum(np.array(layers))))
-                self.set_layers(elevations)
-            if surface is not None:
-                if isinstance(surface, (dict, list, np.ndarray)):
-                    self.set_column_surfaces(surface)
+            self.surface = surface
         else:
             self.read(filename)
 
@@ -353,11 +368,6 @@ class mesh(object):
             n.column.add(col)
         col.identify_neighbours()
 
-    def set_column_layers(self, col):
-        """Populates list of layers for given column."""
-        s = col.surface if col.surface is not None else self.layer[0].top
-        col.layer = [lay for lay in self.layer if s >= lay.centre]
-
     def set_layer_columns(self, lay):
         """Populates list of columns for given layer."""
         lay.column = [col for col in self.column
@@ -365,9 +375,7 @@ class mesh(object):
 
     def setup(self):
         """Sets up internal mesh variables."""
-        for col in self.column:
-            self.set_column_layers(col)
-        for ilayer, lay in enumerate(self.layer):
+        for lay in self.layer:
             self.set_layer_columns(lay)
         self.setup_cells()
 
@@ -476,26 +484,62 @@ class mesh(object):
         false otherwise."""
         return col.num_layers >= self.num_layers - lay.index
 
-    def set_column_surfaces(self, surface):
-        """Sets column surface properties from surface dictionary (keyed by
+    def set_surface(self, surface):
+        """Sets column layers from surface dictionary (keyed by
         column indices) or list/array of values for all columns."""
 
-        if isinstance(surface, dict):
-            for icol, s in surface.items():
-                self.column[icol].surface = s
+        if surface is None:
+           for col in self.column: col.set_surface(self.layer)
+        elif isinstance(surface, dict):
+            for col in self.column:
+                if col.index in surface:
+                    col.set_surface(self.layer, surface[col.index])
+                else:
+                    col.set_surface(self.layer)
         elif isinstance(surface, (list, np.ndarray)):
              if len(surface) == self.num_columns:
                  for col, s in zip(self.column, surface):
-                     col.surface = s
+                     col.set_surface(self.layer, s)
              else:
-                 raise Exception('Surface list or array is the wrong size.')
+                 raise Exception('surface is the wrong size.')
         else:
             raise Exception('Unrecognized surface parameter type.')
+
+    def get_surface(self):
+        """Returns array of column surface elevations."""
+        return np.array([col.surface for col in self.column])
+
+    surface = property(get_surface, set_surface)
+
+    def set_column_layers(self, num_layers):
+        """Sets column layers from dictionary (keyed by column indices) or
+        list/array of layer counts for each column."""
+        if num_layers is None:
+           for col in self.column: col.set_surface(self.layer)
+        elif isinstance(num_layers, dict):
+            for col in self.column:
+                if col.index in num_layers:
+                    col.set_layers(self.layer, num_layers[col.index])
+                else:
+                    col.set_layers(self.layer)
+        elif isinstance(num_layers, (list, np.ndarray)):
+             if len(num_layers) == self.num_columns:
+                 for col, n in zip(self.column, num_layers):
+                     col.set_layers(self.layer, n)
+             else:
+                 raise Exception('num_layers is the wrong size.')
+        else:
+            raise Exception('Unrecognized num_layers parameter type.')
 
     def write(self, filename):
         """Writes mesh to HDF5 file."""
         import h5py
         with h5py.File(filename, 'w') as f:
+            if self.layer:
+                layer_elev = [self.layer[0].top] + \
+                         [lay.bottom for lay in self.layer]
+                lay_group = f.create_group('layer')
+                lay_group.create_dataset('elevation', data = layer_elev)
             if self.node:
                 pos = np.array([n.pos for n in self.node])
                 node_group = f.create_group('node')
@@ -505,13 +549,8 @@ class mesh(object):
                                                  for col in self.column])
                     col_group = f.create_group('column')
                     col_group.create_dataset('node', data = col_node_indices)
-                    surface = np.array([col.surface for col in self.column])
-                    col_group.create_dataset('surface', data = surface)
-            if self.layer:
-                layer_elev = [self.layer[0].top] + \
-                         [lay.bottom for lay in self.layer]
-                lay_group = f.create_group('layer')
-                lay_group.create_dataset('elevation', data = layer_elev)
+                    num_layers = np.array([col.num_layers for col in self.column])
+                    col_group.create_dataset('num_layers', data = num_layers)
 
     def read(self, filename):
         """Reads mesh from HDF5 file."""
@@ -520,6 +559,9 @@ class mesh(object):
         self.column = []
         self.layer = []
         with h5py.File(filename, 'r') as f:
+            if 'layer' in f:
+                lay_group = f['layer']
+                self.set_layers(np.array(lay_group['elevation']))
             if 'node' in f:
                 node_group = f['node']
                 if 'position' in node_group:
@@ -536,12 +578,9 @@ class mesh(object):
                                              for i in col_node_indices]
                                 col = column(node = col_nodes, index = index)
                                 self.add_column(col); index += 1
-                            if 'surface' in col_group:
-                                s = np.array(col_group['surface'])
-                                self.set_column_surfaces(s)
-            if 'layer' in f:
-                lay_group = f['layer']
-                self.set_layers(np.array(lay_group['elevation']))
+                            if 'num_layers' in col_group:
+                                num_layers = np.array(col_group['num_layers'])
+                                self.set_column_layers(num_layers)
 
     def get_meshio_points_cells(self):
         """Returns lists of 3-D points and cells suitable for mesh
@@ -582,10 +621,7 @@ class mesh(object):
         """Translates mesh by specified 3-D shift vector."""
         if isinstance(shift, (list, tuple)): shift = np.array(shift)
         for node in self.node: node.pos += shift[:2]
-        for col in self.column:
-            col.translate(shift[:2])
-            if col.surface is not None:
-                col.surface += shift[2]
+        for col in self.column: col.translate(shift[:2])
         for layer in self.layer: layer.translate(shift[2])
 
     def rotate(self, angle, centre = None):
