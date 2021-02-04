@@ -4,6 +4,15 @@ from layermesh import mesh
 
 class meshTestCase(unittest.TestCase):
 
+    def test_null(self):
+
+        m = mesh.mesh()
+        self.assertEqual(m.node, [])
+        self.assertEqual(m.column, [])
+        self.assertEqual(m.layer, [])
+        self.assertEqual(m.cell, [])
+        self.assertEqual(m.volume, 0)
+
     def test_rectangular(self):
 
         dx = [10.]*3; dy = [12.] * 3
