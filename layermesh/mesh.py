@@ -543,6 +543,8 @@ class mesh(object):
         """Writes mesh to HDF5 file."""
         import h5py
         with h5py.File(filename, 'w') as f:
+            cell_group = f.create_group('cell')
+            cell_group.create_dataset('type_sort', data = self.cell_type_sort)
             if self.layer:
                 layer_elev = [self.layer[0].top] + \
                          [lay.bottom for lay in self.layer]
@@ -571,6 +573,10 @@ class mesh(object):
         self.empty()
         num_layers = None
         with h5py.File(filename, 'r') as f:
+            if 'cell' in f:
+                cell_group = f['cell']
+                if 'type_sort' in cell_group:
+                    self.cell_type_sort = int(np.array(cell_group['type_sort']))
             if 'layer' in f:
                 lay_group = f['layer']
                 self.set_layers(np.array(lay_group['elevation']))
