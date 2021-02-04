@@ -288,11 +288,10 @@ class mesh(object):
         """Initialize layered mesh either from file or via other
         parameters."""
 
-        self.empty()
-
         if filename is not None: self.read(filename)
         else:
-
+            self.empty()
+            self.cells_type_sort = kwargs.get('cells_type_sort', True)
             rectangular = kwargs.get('rectangular', None)
             if rectangular is not None:
                 thicknesses = rectangular[2]
@@ -301,11 +300,7 @@ class mesh(object):
                 self.set_layers(elevations)
                 spacings = rectangular[:2]
                 self.set_rectangular_columns(spacings)
-
             self.surface = kwargs.get('surface', None)
-
-        self.cells_type_sort = kwargs.get('cells_type_sort', True)
-        self.setup()
 
     def __repr__(self):
         return '%d columns, %d layers, %d cells' % \
@@ -513,6 +508,7 @@ class mesh(object):
                  raise Exception('surface is the wrong size.')
         else:
             raise Exception('Unrecognized surface parameter type.')
+        self.setup()
 
     def get_surface(self):
         """Returns array of column surface elevations."""
@@ -539,6 +535,7 @@ class mesh(object):
                  raise Exception('num_layers is the wrong size.')
         else:
             raise Exception('Unrecognized num_layers parameter type.')
+        self.setup()
 
     def write(self, filename):
         """Writes mesh to HDF5 file."""
@@ -570,6 +567,7 @@ class mesh(object):
         """Reads mesh from HDF5 file."""
         import h5py
         self.empty()
+        num_layers = None
         with h5py.File(filename, 'r') as f:
             if 'layer' in f:
                 lay_group = f['layer']
@@ -592,7 +590,7 @@ class mesh(object):
                                 self.add_column(col); index += 1
                             if 'num_layers' in col_group:
                                 num_layers = np.array(col_group['num_layers'])
-                                self.set_column_layers(num_layers)
+        self.set_column_layers(num_layers)
 
     def get_meshio_points_cells(self):
         """Returns lists of 3-D points and cells suitable for mesh
