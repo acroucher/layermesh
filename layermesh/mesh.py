@@ -873,7 +873,7 @@ class mesh(object):
             return track
         else: return []
 
-    def layer_plot(self, **kwargs):
+    def layer_plot(self, lay = -1, **kwargs):
         """Creates a 2-D Matplotlib plot of the mesh at a specified layer."""
 
         import matplotlib.pyplot as plt
@@ -888,7 +888,6 @@ class mesh(object):
             if lay is None:
                 raise Exception('Elevation not found in layer_plot()')
         else:
-            lay = kwargs.get('layer', self.layer[-1])
             if isinstance(lay, layer):
                 if lay not in self.layer:
                     raise Exception('Unknown layer in layer_plot()')
@@ -966,7 +965,7 @@ class mesh(object):
                 value_label += ' (' + unit + ')'
             cbar.set_label(value_label)
 
-    def slice_plot(self, **kwargs):
+    def slice_plot(self, line = 'x', **kwargs):
         """Creates a 2-D Matplotlib plot of the mesh through a specified
         vertical slice."""
 
@@ -976,28 +975,27 @@ class mesh(object):
         if 'axes' in kwargs: ax = kwargs['axes']
         else: fig, ax = plt.subplots()
 
-        linespec = kwargs.get('line', 'x')
-        if linespec == 'x':
+        if line == 'x':
             bounds = self.bounds
-            line = ([bounds[0][0], self.centre[1]],
-                    [bounds[1][0], self.centre[1]])
-        elif linespec == 'y':
+            l = ([bounds[0][0], self.centre[1]],
+                 [bounds[1][0], self.centre[1]])
+        elif line == 'y':
             bounds = self.bounds
-            line = ([self.centre[0], bounds[0][1]],
-                    [self.centre[0], bounds[1][1]])
-        elif isinstance(linespec, (float, int)):
+            l = ([self.centre[0], bounds[0][1]],
+                 [self.centre[0], bounds[1][1]])
+        elif isinstance(line, (float, int)):
             # line through mesh centre at specified angle in degrees:
             bounds = self.bounds
             r = 0.5 * np.linalg.norm(bounds[1] - bounds[0])
             from math import radians, cos, sin
             theta = radians(linespec)
             d = r * np.array([sin(theta), cos(theta)])
-            line = [self.centre - d, self.centre + d]
-        else: line = linespec
+            l = [self.centre - d, self.centre + d]
+        else: l = line
 
-        line = [np.array(p) for p in line]
+        l = [np.array(p) for p in l]
 
-        if np.linalg.norm(line[1] - line[0]) > 0.0:
+        if np.linalg.norm(l[1] - l[0]) > 0.0:
 
             labels = kwargs.get('labels', None)
             label_fmt = kwargs.get('label_format', '%g')
@@ -1005,21 +1003,21 @@ class mesh(object):
             slice_cells = []
             verts = []
             dcol = {}
-            track = self.column_track(line)
+            track = self.column_track(l)
             for item in track:
                 col, points = item[0], item[1:]
                 inpoint = points[0]
                 if len(points) > 1: outpoint = points[1]
                 else: outpoint = inpoint
-                if linespec == 'x':
+                if line == 'x':
                     din, dout = inpoint[0], outpoint[0]
                     default_xlabel = 'x'
-                elif linespec == 'y':
+                elif line == 'y':
                     din, dout = inpoint[1], outpoint[1]
                     default_xlabel = 'y'
                 else:
-                    din = np.linalg.norm(inpoint - line[0])
-                    dout = np.linalg.norm(outpoint - line[0])
+                    din = np.linalg.norm(inpoint - l[0])
+                    dout = np.linalg.norm(outpoint - l[0])
                     default_xlabel = 'distance'
                 dcol[col.index] = 0.5 * (din + dout)
                 for c in col.cell:
