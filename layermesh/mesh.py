@@ -539,18 +539,23 @@ class mesh(object):
                 layer_elev = [self.layer[0].top] + \
                          [lay.bottom for lay in self.layer]
                 lay_group = f.create_group('layer')
-                lay_group.create_dataset('elevation', data = layer_elev)
+                dset = lay_group.create_dataset('elevation', data = layer_elev)
+                dset.attrs['description'] = 'Layer boundary elevations, ' + \
+                                            'from top to bottom'
             if self.node:
                 pos = np.array([n.pos for n in self.node])
                 node_group = f.create_group('node')
-                node_group.create_dataset('position', data = pos)
+                dset = node_group.create_dataset('position', data = pos)
+                dset.attrs['description'] = 'Position of each node'
                 if self.column:
                     col_node_indices = np.array([[n.index for n in col.node]
                                                  for col in self.column])
                     col_group = f.create_group('column')
-                    col_group.create_dataset('node', data = col_node_indices)
+                    dset = col_group.create_dataset('node', data = col_node_indices)
+                    dset.attrs['description'] = 'Indices of nodes in each column'
                     num_layers = np.array([col.num_layers for col in self.column])
-                    col_group.create_dataset('num_layers', data = num_layers)
+                    dset = col_group.create_dataset('num_layers', data = num_layers)
+                    dset.attrs['description'] = 'Number of layers in each column'
 
     def read(self, filename):
         """Reads mesh from HDF5 file."""
