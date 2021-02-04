@@ -283,26 +283,26 @@ class cell(object):
 class mesh(object):
     """Layered computational mesh."""
 
-    def __init__(self, filename = None, columns = None, layers = None,
-                 surface = None, cells_type_sort = True):
-        """Initialize layered mesh either from file or specified columns and
-        layers."""
+    def __init__(self, filename = None, **kwargs):
 
-        if filename is None:
-            if layers is not None:
-                elevations = np.hstack((np.zeros(1),
-                                       -np.cumsum(np.array(layers))))
-                self.set_layers(elevations)
-            if columns is not None:
-                if isinstance(columns, (list, tuple)) and len(columns) == 2:
-                    self.set_rectangular_columns(columns)
-                else:
-                    raise Exception("Unrecognized columns parameter.")
-            self.surface = surface
+        """Initialize layered mesh either from file or via other
+        parameters."""
+
+        if filename is not None: self.read(filename)
         else:
-            self.read(filename)
 
-        self.cells_type_sort = cells_type_sort
+            rectangular = kwargs.get('rectangular', None)
+            if rectangular is not None:
+                thicknesses = rectangular[2]
+                elevations = np.hstack((np.zeros(1),
+                                       -np.cumsum(np.array(thicknesses))))
+                self.set_layers(elevations)
+                spacings = rectangular[:2]
+                self.set_rectangular_columns(spacings)
+
+            self.surface = kwargs.get('surface', None)
+
+        self.cells_type_sort = kwargs.get('cells_type_sort', True)
         self.setup()
 
     def __repr__(self):
