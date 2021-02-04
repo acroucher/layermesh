@@ -286,6 +286,7 @@ class meshTestCase(unittest.TestCase):
         m1.write(filename)
 
         m2 = mesh.mesh(filename)
+        self.assertEqual(m1.cell_type_sort, m2.cell_type_sort)
         def nodepos(m): return np.array([n.pos for n in m.node])
         self.assertTrue(np.allclose(nodepos(m1), nodepos(m2)))
         def cols(m): return np.array([[n.index for n in col.node]

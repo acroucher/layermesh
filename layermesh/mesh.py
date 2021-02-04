@@ -291,7 +291,8 @@ class mesh(object):
         if filename is not None: self.read(filename)
         else:
             self.empty()
-            self.cells_type_sort = kwargs.get('cells_type_sort', True)
+            self.cell_type_sort = kwargs.get('cell_type_sort',
+                                             default_cell_type_sort)
             rectangular = kwargs.get('rectangular', None)
             if rectangular is not None:
                 thicknesses = rectangular[2]
@@ -387,7 +388,7 @@ class mesh(object):
         """Sets up cell properties of mesh, layers and columns."""
         self.cell = []
         for col in self.column: col.cell = []
-        if self.cells_type_sort:
+        if self.cell_type_sort:
             self._setup_cells_type_sorted()
         else:
             self._setup_cells_type_unsorted()
@@ -413,7 +414,7 @@ class mesh(object):
         elif isinstance(self.cells_type_sort, [list, tuple, np.ndarray]):
             cell_types = self.cells_type_sort
         else:
-            raise Exception('Unrecognised cell type sort: %s' % str(self.cells_type_sort))
+            raise Exception('Unrecognised cell type sort: %s' % str(self.cell_type_sort))
 
         index = 0
         for cell_type in cell_types:
