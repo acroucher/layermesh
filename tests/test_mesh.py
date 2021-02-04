@@ -275,6 +275,30 @@ class meshTestCase(unittest.TestCase):
         t = m.column_track(([-2, 3.5], [40, 15]))
         self.assertEqual(track_indices(t), [0, 1, 2])
 
+    def test_io(self):
+
+        import os
+        dx = [10.]*3; dy = [12.] * 3
+        dz = [1., 2., 3.]
+        s = [0, 0, -1.5, -1.8, -2.1, -2.8, -3, -1, 0]
+        m1 = mesh.mesh(rectangular = (dx, dy, dz), surface = s)
+        filename = 'mesh.h5'
+        m1.write(filename)
+
+        m2 = mesh.mesh(filename)
+        def nodepos(m): return np.array([n.pos for n in m.node])
+        self.assertTrue(np.allclose(nodepos(m1), nodepos(m2)))
+        def cols(m): return np.array([[n.index for n in col.node]
+                                      for col in m.column])
+        self.assertTrue(np.allclose(cols(m1), cols(m2)))
+        def lays(m): return np.array([m.layer[0].top] + \
+                         [lay.bottom for lay in m.layer])
+        self.assertTrue(np.allclose(lays(m1), lays(m2)))
+        def cells(m): return np.array([c.index for c in m.cell])
+        self.assertTrue(np.allclose(cells(m1), cells(m2)))
+
+        os.remove(filename)
+
 if __name__ == '__main__':
 
     suite = unittest.TestLoader().loadTestsFromTestCase(meshTestCase)
