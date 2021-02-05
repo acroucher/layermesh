@@ -643,6 +643,16 @@ class mesh(object):
         return [col.cell[0] for col in self.column]
     surface_cells = property(get_surface_cells)
 
+    def get_column_faces(self):
+        """Returns a set of mesh column faces, each one being a frozenset of
+        the two column indices on either side of a face."""
+        faces = set()
+        for col in self.column:
+            for nbr in col.neighbour:
+                faces.add(frozenset([col.index, nbr.index]))
+        return faces
+    column_faces = property(get_column_faces)
+
     def translate(self, shift):
         """Translates mesh by specified 3-D shift vector."""
         if isinstance(shift, (list, tuple)): shift = np.array(shift)
@@ -1086,3 +1096,41 @@ class mesh(object):
 
         else:
             raise Exception('Line of zero length in slice_plot()')
+
+    def fit_data_to_columns(self, data, smoothing = 0.01):
+        """Fits scattered data to the columns of the mesh, using smoothed
+        piecewise constant least-squares fitting. The data should be
+        in the form of a 3-column array with x,y,z data in each
+        row. Increasing the smoothing parameter will decrease
+        gradients between columns, and a non-zero value must be used
+        to obtain a solution if any columns contain no data."""
+
+        from scipy import sparse
+        from scipy.sparse.linalg import spsolve
+
+        N = self.num_columns
+        A = sparse.lil_matrix((N, N))
+        b = np.zeros(N)
+
+        for d in data:
+            col = self.find(d[:2])
+            if col:
+                i = col.index
+                A[i,i] += 1
+                b[i] += d[2]
+
+        faces = self.column_faces
+        for f in faces:
+            c = tuple(f)
+            A[c[0], c[0]] += smoothing
+            A[c[0], c[1]] -= smoothing
+            A[c[1], c[1]] += smoothing
+            A[c[1], c[0]] -= smoothing
+
+        A = A.tocsr()
+        return spsolve(A, b)
+
+    def fit_surface(self, data, smoothing = 0.01):
+        """Fits surface elevation data to determine the number of layers in
+        each column."""
+        self.surface = self.fit_data_to_columns(data, smoothing)
