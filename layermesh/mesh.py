@@ -716,21 +716,27 @@ class mesh(object):
     def find_layer(self, z):
         """Returns layer containing elevation z, or None if the point is
         outside the mesh."""
-        if self.layer[-1].bottom <= z <= self.layer[0].top:
-            i0, i1 = 0, self.num_layers - 1
-            while i1 > i0:
-                im = (i0 + i1) // 2
-                if z >= self.layer[im].bottom: i1 = im
-                else: i0 = im + 1
-            return self.layer[i1]
-        else:
+        if self.num_layers == 0:
             return None
+        else:
+            if self.layer[-1].bottom <= z <= self.layer[0].top:
+                i0, i1 = 0, self.num_layers - 1
+                while i1 > i0:
+                    im = (i0 + i1) // 2
+                    if z >= self.layer[im].bottom: i1 = im
+                    else: i0 = im + 1
+                return self.layer[i1]
+            else:
+                return None
 
     def find_column(self, pos):
         """Returns column containing point pos (list, tuple or numpy array of
         length 2), or None if pos is outside the mesh."""
-        c = self.layer[-1].find(pos)
-        return c if c is None else c.column
+        if self.num_layers == 0:
+            return None
+        else:
+            c = self.layer[-1].find(pos)
+            return c if c is None else c.column
 
     def find_cell(self, pos):
         """Returns cell containing point pos (list, tuple or numpy array of
