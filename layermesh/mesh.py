@@ -170,6 +170,14 @@ class layer(object):
     def get_num_cells(self): return len(self.cell)
     num_cells = property(get_num_cells)
 
+    def get_nodes(self):
+        """Returns set of nodes in layer."""
+        nodes = set()
+        for col in self.column:
+            for n in col.node: nodes.add(n)
+        return nodes
+    node = property(get_nodes)
+
     def get_centre(self):
         """Returns layer centre."""
         if self._centre is None:
