@@ -77,6 +77,12 @@ class column(object):
         return self.area * sum([lay.thickness for lay in self.layer])
     volume = property(get_volume)
 
+    def get_bounding_box(self):
+        """Returns column horizontal bounding box."""
+        from layermesh.geometry import bounds_of_points
+        return bounds_of_points([n.pos for n in self.node])
+    bounding_box = property(get_bounding_box)
+
     def set_layers(self, layers, num_layers):
         """Sets column layers to be the last num_layers layers from the
         specified list."""
