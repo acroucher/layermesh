@@ -300,6 +300,31 @@ class meshTestCase(unittest.TestCase):
 
         os.remove(filename)
 
+    def test_fit(self):
+
+        dx = [10.]*3; dy = [12.] * 3
+        dz = [1.]*3 + [2.] * 3
+        m = mesh.mesh(rectangular = (dx, dy, dz))
+
+        def f(pos): return -(0.1 * pos[0] + 0.01 * pos[0] * pos[1])
+        colpos = np.array([col.centre for col in m.column])
+        z = np.array([f(p) for p in colpos])
+        data = np.hstack((colpos, np.vstack(z)))
+        zfit = m.fit_data_to_columns(data)
+        self.assertTrue(np.allclose(z, zfit, rtol = 0.05))
+
+        sub = [0, 2, 3, 6, 7]
+        subdata = data[sub, :]
+        zfit = m.fit_data_to_columns(subdata)
+        self.assertTrue(np.allclose(z[sub], zfit[sub], rtol = 0.05))
+
+        zfit = m.fit_data_to_columns(subdata, smoothing = 0.01)
+        self.assertTrue(np.allclose(z[sub], zfit[sub], rtol = 0.05))
+
+        zfit = m.fit_data_to_columns(subdata, smoothing = 0.02)
+        self.assertFalse(np.allclose(z[sub], zfit[sub], rtol = 0.05))
+        self.assertTrue(np.allclose(z[sub], zfit[sub], rtol = 0.06))
+
 if __name__ == '__main__':
 
     suite = unittest.TestLoader().loadTestsFromTestCase(meshTestCase)
