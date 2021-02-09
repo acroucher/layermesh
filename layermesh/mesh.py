@@ -160,6 +160,7 @@ class layer(object):
         self.top = top
         self.index = index
         self._centre = None
+        self.quadtree = None
 
     def __repr__(self):
         return str(self.index)
@@ -206,12 +207,20 @@ class layer(object):
         return bounds_of_points([n.pos for n in self.node])
     horizontal_bounds = property(get_horizontal_bounds)
 
+    def setup_quadtree(self):
+        """Sets up quadtree for column searching."""
+        from layermesh import quadtree
+        self.quadtree = quadtree.quadtree(self.horizontal_bounds,
+                                          self.column)
+
     def translate(self, shift):
-        """Translates layer vertically by specified shift."""
-        self.bottom += shift
-        self.top += shift
+        """Translates layer by specified 3-D shift vector."""
+        self.bottom += shift[2]
+        self.top += shift[2]
         if self._centre is not None:
-            self._centre += shift
+            self._centre += shift[2]
+        if self.quadtree is not None:
+            self.quadtree.translate(shift[:2])
 
     def contains(self, z):
         """Returns True if layer contains specified elevation z, or False
@@ -224,9 +233,11 @@ class layer(object):
         layer contains this point then None is returned.
         """
 
-        for c in self.cell:
-            if c.column.contains(pos): return c
-        return None
+        if self.quadtree is None: self.setup_quadtree()
+        col = self.quadtree.search(pos)
+        if col:
+            return self.column_cell[col.index]
+        else: return None
 
     def cells_inside(self, polygon):
         """Returns a list of cells in the layer with columns inside the
@@ -682,7 +693,7 @@ class mesh(object):
         if isinstance(shift, (list, tuple)): shift = np.array(shift)
         for node in self.node: node.pos += shift[:2]
         for col in self.column: col.translate(shift[:2])
-        for layer in self.layer: layer.translate(shift[2])
+        for layer in self.layer: layer.translate(shift)
 
     def rotate(self, angle, centre = None):
         """Rotates mesh horizontally by the specified angle (degrees
@@ -698,6 +709,9 @@ class mesh(object):
         for col in self.column:
             if col._centroid is not None:
                 col._centroid = np.dot(A, col._centroid) + b
+        for lay in self.layer:
+            if lay.quadtree is not None:
+                lay.setup_quadtree()
 
     def find_layer(self, z):
         """Returns layer containing elevation z, or None if the point is
