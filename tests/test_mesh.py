@@ -235,9 +235,16 @@ class meshTestCase(unittest.TestCase):
         m.translate((100, 0, 10))
         c = m.find([105, 8], indices = True)
         self.assertEqual(0, c)
+        c = m.find([132, 40], indices = True)
+        self.assertEqual(8, c)
 
         l = m.find(-15, indices = True)
         self.assertEqual(2, l)
+
+        m.translate((-100, 0, -10))
+        m.rotate(90, [0, 0])
+        c = m.find([30, -50], indices = True)
+        self.assertEqual(5, c)
 
     def test_column_track(self):
 
