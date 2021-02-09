@@ -200,6 +200,12 @@ class layer(object):
         return self.area * self.thickness
     volume = property(get_volume)
 
+    def get_horizontal_bounds(self):
+        """Returns horizontal bounding box for layer."""
+        from layermesh.geometry import bounds_of_points
+        return bounds_of_points([n.pos for n in self.node])
+    horizontal_bounds = property(get_horizontal_bounds)
+
     def translate(self, shift):
         """Translates layer vertically by specified shift."""
         self.bottom += shift
