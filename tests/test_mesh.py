@@ -157,6 +157,16 @@ class meshTestCase(unittest.TestCase):
 
     def test_find(self):
 
+        m = mesh.mesh()
+        c = m.find((0,0,0))
+        self.assertIsNone(c)
+        col = m.find((0,0))
+        self.assertIsNone(col)
+        lay = m.find(-1)
+        self.assertIsNone(lay)
+        cells = m.find(lambda c: True)
+        self.assertEqual(cells, [])
+
         dx = [10, 20, 30]; dy = [20, 15, 10]
         dz = [5, 10, 15]
         surface = [0.2, -9, -18] * 3
