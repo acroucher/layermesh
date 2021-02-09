@@ -421,12 +421,14 @@ class mesh(object):
         cells = {}
         for lay in self.layer:
             lay.cell = []
+            lay.column_cell = {}
             for col in lay.column:
                 c = cell(lay, col)
                 cell_type = cell.num_nodes
                 if cell_type not in cells: cells[cell_type] = []
                 cells[cell_type].append(c)
                 lay.cell.append(c)
+                lay.column_cell[col.index] = c
                 col.cell.append(c)
 
         cell_types = cells.keys()
@@ -450,10 +452,12 @@ class mesh(object):
         index = 0
         for lay in self.layer:
             lay.cell = []
+            lay.column_cell = {}
             for col in lay.column:
                 c = cell(lay, col, index)
                 self.cell.append(c)
                 lay.cell.append(c)
+                lay.column_cell[col.index] = c
                 col.cell.append(c)
                 index += 1
 
