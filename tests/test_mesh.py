@@ -354,9 +354,9 @@ class meshTestCase(unittest.TestCase):
 
         x = 20
         z2 = -2
-        cols = [col.index for col in m.column if col.centre[0] < x]
-        data = np.array([[m.column[i].centre[0], m.column[i].centre[1], z2]
-                         for i in cols])
+        cols = [col for col in m.column if col.centre[0] < x]
+        data = np.array([[col.centre[0], col.centre[1], z2]
+                         for col in cols])
         m.fit_surface(data, columns = cols)
         expected = np.array([[col.centre[0], col.centre[1],
                               z2 if col.centre[0] < x else z]

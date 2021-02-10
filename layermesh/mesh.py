@@ -1165,9 +1165,8 @@ class mesh(object):
         from scipy import sparse
         from scipy.sparse.linalg import spsolve
 
-        if columns is None:
-            columns = [col.index for col in self.column]
-        col_dict = {col: i for i, col in enumerate(columns)}
+        if columns is None: columns = self.column
+        col_dict = {col.index: i for i, col in enumerate(columns)}
 
         N = len(columns)
         A = sparse.lil_matrix((N, N))
@@ -1201,17 +1200,16 @@ class mesh(object):
         data in each row.
 
         Fitting can be carried out over a subset of the mesh columns
-        by specifying a list or array of column indices.
+        by specifying a list or array of columns.
 
         Increasing the smoothing parameter will decrease gradients
         between columns, and a non-zero value must be used to obtain a
         solution if any columns contain no data."""
 
-        if columns is None:
-            columns = [col.index for col in self.column]
+        if columns is None: columns = self.column
 
         z = self.fit_data_to_columns(data, columns, smoothing)
 
-        for i, s in zip(columns, z):
-            self.column[i].set_surface(self.layer, s)
+        for col, s in zip(columns, z):
+            col.set_surface(self.layer, s)
         self.setup()
