@@ -239,6 +239,11 @@ class layer(object):
             return self.column_cell[col.index]
         else: return None
 
+    def columns_inside(self, polygon):
+        """Returns a list of columns in the layer which are inside the
+        specified polygon."""
+        return [col for col in self.column if col.inside(polygon)]
+
     def cells_inside(self, polygon):
         """Returns a list of cells in the layer with columns inside the
         specified polygon."""
@@ -800,7 +805,7 @@ class mesh(object):
         If sort is True, the returned cells are sorted by cell index. If indices is
         True, cell indices are returned instead of cells."""
 
-        cols = [c.column for c in self.layer[-1].cells_inside(polygon)]
+        cols = self.columns_inside(polygon)
         cells = []
         if elevations is None:
             for col in cols:
