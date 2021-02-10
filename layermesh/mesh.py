@@ -798,6 +798,13 @@ class mesh(object):
         else:
             raise Exception('Unrecognised match type.')
 
+    def columns_inside(self, polygon, indices = False):
+        """Returns a list of mesh columns inside the specified polygon. If
+        indices is True, column indices are returned instead of columns."""
+
+        cols = self.layer[-1].columns_inside(polygon)
+        return [col.index for col in cols] if indices else cols
+
     def cells_inside(self, polygon, elevations = None, sort = True, indices = False):
         """Returns a list of cells in the mesh with columns inside the
         specified polygon. Specifying the elevations parameter as a two-element

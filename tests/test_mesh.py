@@ -241,6 +241,8 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(len(cells), 10)
         cells = m.cells_inside(rect, elevations = [-30, -20])
         self.assertEqual(len(cells), 4)
+        cols = m.columns_inside(rect)
+        self.assertEqual(len(cols), 4)
 
         m.translate((100, 0, 10))
         c = m.find([105, 8], indices = True)
