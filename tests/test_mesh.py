@@ -342,6 +342,27 @@ class meshTestCase(unittest.TestCase):
         self.assertFalse(np.allclose(z[sub], zfit[sub], rtol = 0.05))
         self.assertTrue(np.allclose(z[sub], zfit[sub], rtol = 0.06))
 
+        z = -1
+        data = np.array([[col.centre[0], col.centre[1], z]
+                         for col in m.column])
+        m.fit_surface(data)
+        self.assertTrue(np.allclose(z, m.surface))
+
+        subdata = data[sub, :]
+        m.fit_surface(subdata)
+        self.assertTrue(np.allclose(z, m.surface))
+
+        x = 20
+        z2 = -2
+        cols = [col.index for col in m.column if col.centre[0] < x]
+        data = np.array([[m.column[i].centre[0], m.column[i].centre[1], z2]
+                         for i in cols])
+        m.fit_surface(data, columns = cols)
+        expected = np.array([[col.centre[0], col.centre[1],
+                              z2 if col.centre[0] < x else z]
+                             for col in m.column])
+        self.assertTrue(np.allclose(expected[:, 2], m.surface))
+
 if __name__ == '__main__':
 
     suite = unittest.TestLoader().loadTestsFromTestCase(meshTestCase)

@@ -1141,40 +1141,73 @@ class mesh(object):
         else:
             raise Exception('Line of zero length in slice_plot()')
 
-    def fit_data_to_columns(self, data, smoothing = 0.01):
+    def fit_data_to_columns(self, data, columns = None, smoothing = 0.01):
         """Fits scattered data to the columns of the mesh, using smoothed
-        piecewise constant least-squares fitting. The data should be
-        in the form of a 3-column array with x,y,z data in each
-        row. Increasing the smoothing parameter will decrease
-        gradients between columns, and a non-zero value must be used
-        to obtain a solution if any columns contain no data."""
+        piecewise constant least-squares fitting.
+
+        The data should be in the form of a 3-column array with x,y,z
+        data in each row.
+
+        Fitting can be carried out over a subset of the mesh columns
+        by specifying a list or array of column indices.
+
+        Increasing the smoothing parameter will decrease gradients
+        between columns, and a non-zero value must be used to obtain a
+        solution if any columns contain no data.
+
+        """
 
         from scipy import sparse
         from scipy.sparse.linalg import spsolve
 
-        N = self.num_columns
+        if columns is None:
+            columns = [col.index for col in self.column]
+        col_dict = {col: i for i, col in enumerate(columns)}
+
+        N = len(columns)
         A = sparse.lil_matrix((N, N))
         b = np.zeros(N)
 
         for d in data:
             col = self.find(d[:2])
             if col:
-                i = col.index
-                A[i,i] += 1
-                b[i] += d[2]
+                if col.index in col_dict:
+                    i = col_dict[col.index]
+                    A[i,i] += 1
+                    b[i] += d[2]
 
         faces = self.column_faces
         for f in faces:
-            c = tuple(f)
-            A[c[0], c[0]] += smoothing
-            A[c[0], c[1]] -= smoothing
-            A[c[1], c[1]] += smoothing
-            A[c[1], c[0]] -= smoothing
+            cols = tuple(f)
+            if all([col in col_dict for col in cols]):
+                i = [col_dict[col] for col in cols]
+                A[i[0], i[0]] += smoothing
+                A[i[0], i[1]] -= smoothing
+                A[i[1], i[1]] += smoothing
+                A[i[1], i[0]] -= smoothing
 
         A = A.tocsr()
         return spsolve(A, b)
 
-    def fit_surface(self, data, smoothing = 0.01):
+    def fit_surface(self, data, columns = None, smoothing = 0.01):
         """Fits surface elevation data to determine the number of layers in
-        each column."""
-        self.surface = self.fit_data_to_columns(data, smoothing)
+        each column.
+
+        The data should be in the form of a 3-column array with x,y,z
+        data in each row.
+
+        Fitting can be carried out over a subset of the mesh columns
+        by specifying a list or array of column indices.
+
+        Increasing the smoothing parameter will decrease gradients
+        between columns, and a non-zero value must be used to obtain a
+        solution if any columns contain no data."""
+
+        if columns is None:
+            columns = [col.index for col in self.column]
+
+        z = self.fit_data_to_columns(data, columns, smoothing)
+
+        for i, s in zip(columns, z):
+            self.column[i].set_surface(self.layer, s)
+        self.setup()
