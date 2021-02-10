@@ -678,15 +678,20 @@ class mesh(object):
         return [col.cell[0] for col in self.column]
     surface_cells = property(get_surface_cells)
 
-    def get_column_faces(self):
+    def column_faces(self, columns = None):
         """Returns a set of mesh column faces, each one being a frozenset of
-        the two column indices on either side of a face."""
+        the two column indices on either side of a face. A list of the
+        columns may be optionally specified, otherwise all columns
+        will be included.
+        """
+        if columns is None: columns = self.column
+        col_dict = {col.index: col for col in columns}
         faces = set()
-        for col in self.column:
+        for col in columns:
             for nbr in col.neighbour:
-                faces.add(frozenset([col.index, nbr.index]))
+                if nbr.index in col_dict:
+                    faces.add(frozenset([col.index, nbr.index]))
         return faces
-    column_faces = property(get_column_faces)
 
     def translate(self, shift):
         """Translates mesh by specified 3-D shift vector."""
@@ -1176,15 +1181,14 @@ class mesh(object):
                     A[i,i] += 1
                     b[i] += d[2]
 
-        faces = self.column_faces
+        faces = self.column_faces(columns)
         for f in faces:
             cols = tuple(f)
-            if all([col in col_dict for col in cols]):
-                i = [col_dict[col] for col in cols]
-                A[i[0], i[0]] += smoothing
-                A[i[0], i[1]] -= smoothing
-                A[i[1], i[1]] += smoothing
-                A[i[1], i[0]] -= smoothing
+            i = [col_dict[col] for col in cols]
+            A[i[0], i[0]] += smoothing
+            A[i[0], i[1]] -= smoothing
+            A[i[1], i[1]] += smoothing
+            A[i[1], i[0]] -= smoothing
 
         A = A.tocsr()
         return spsolve(A, b)
