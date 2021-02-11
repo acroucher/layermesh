@@ -370,6 +370,27 @@ class meshTestCase(unittest.TestCase):
                              for col in m.column])
         self.assertTrue(np.allclose(expected[:, 2], m.surface))
 
+    def test_refine(self):
+
+        dx, dy, dz = [100]*10, [150]*8, [10]*3
+
+        m = mesh.mesh(rectangular = (dx, dy, dz))
+        original_area = m.area
+        original_centre = m.centre
+        m.refine()
+        self.assertEqual(m.area, original_area)
+        self.assertTrue(np.allclose(m.centre, original_centre))
+        self.assertEqual(m.num_columns, 20 * 16)
+        self.assertEqual(m.num_nodes, 21 * 17)
+
+        m = mesh.mesh(rectangular = (dx, dy, dz))
+        cols = [col for col in m.column if col.centre[0] < 200]
+        m.refine(cols)
+        self.assertEqual(m.area, original_area)
+        self.assertTrue(np.allclose(m.centre, original_centre))
+        self.assertEqual(m.num_columns, 16 * 4 + 8 * 3 + 8 * 8)
+        self.assertEqual(m.num_nodes, 5 * 17 + 9 * 9)
+
 if __name__ == '__main__':
 
     suite = unittest.TestLoader().loadTestsFromTestCase(meshTestCase)

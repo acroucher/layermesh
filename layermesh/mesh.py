@@ -1252,3 +1252,125 @@ class mesh(object):
         for col, s in zip(columns, z):
             col.set_surface(self.layer, s)
         self.setup()
+
+    def refine(self, columns = None):
+        """Refines selected columns in the mesh. If no columns are specified,
+        then all columns are refined.
+
+        Each selected column is divided into four new
+        columns. Triangular transition columns are added around the
+        edge of the refinement area as needed.
+
+        Based on the mulgrid refine() method in PyTOUGH.
+        """
+
+        from copy import copy
+
+        def add_midpoint_node(nodes, side_nodes):
+            """Create node at midpoint between two nodes, and add it to the
+            dictionary of side nodes, indexed by the original node
+            indices."""
+            midpos = 0.5 * (nodes[0].pos + nodes[1].pos)
+            mid = node(midpos)
+            self.add_node(mid)
+            ind = frozenset((nodes[0].index, nodes[1].index))
+            side_nodes[ind] = mid
+            return side_nodes
+
+        def transition_type(num_nodes, sides):
+            """Returns transition type- classified by how many
+            refined sides, starting side, and range"""
+            num_refined = len(sides)
+            missing = list(set(range(num_nodes)) - set(sides))
+            num_unrefined = len(missing)
+            if num_refined == 1:
+                return 1, sides[0], 0
+            elif num_refined == num_nodes:
+                return num_nodes, 0, num_nodes - 1
+            elif num_unrefined == 1:
+                return num_refined, (missing[0] + 1) % num_nodes, num_nodes - 2
+            elif num_nodes == 4 and num_refined == 2:
+                diff = sides[1] - sides[0]
+                if diff < 3: return num_refined, sides[0], diff
+                else: return num_refined, sides[1], 1
+            else:
+                raise Exception('Unhandled transition in refine().')
+
+        # How to subdivide a column, based on number of nodes, number of
+        # refined sides and range of refined sides:
+        transition_column = {3: {(1, 0): ((0, (0, 1), 2), ((0, 1), 1, 2)),
+                                 (2, 1): ((0, (0, 1), (1, 2), 2), ((0, 1), 1, (1, 2))),
+                                 (3, 2): ((0, (0, 1), (2, 0)), ((0, 1), 1, (1, 2)),
+                                          ((1, 2), 2, (2, 0)), ((0, 1), (1, 2), (2, 0)))},
+                             4: {(1, 0): ((0, (0, 1), 3), ((0, 1), 1, 2),
+                                          ((0, 1), 2, 3)),
+                                 (2, 1): ((0, (0, 1), 'c'), ((0, 1), 1, 'c'),
+                                          (1, (1, 2), 'c'), ((1, 2), 2, 'c'),
+                                          (2, 3, 'c'), (0, 'c', 3)),
+                                 (2, 2): ((0, (0, 1), (2, 3), 3),
+                                          ((0, 1), 1, 2, (2, 3))),
+                                 (3, 2): ((0, (0, 1), (2, 3), 3),
+                                          ((0, 1), 1, (1, 2)), ((1, 2), 2, (2, 3)),
+                                          ((0, 1), (1, 2), (2, 3))),
+                                 (4, 3): ((0, (0, 1), 'c', (3, 0)),
+                                          ((0, 1), 1, (1, 2), 'c'),
+                                          ((1, 2), 2, (2, 3), 'c'),
+                                          ((2, 3), 3, (3, 0), 'c'))}}
+
+        if columns is None: columns = self.column
+        halo = set(columns)
+        for col in columns: halo = halo | col.neighbour
+        faces = self.column_faces(halo)
+
+        side_nodes = {}
+        for f in faces:
+            cols = [self.column[i] for i in tuple(f)]
+            nodes = tuple(set(cols[0].node) & set(cols[1].node))
+            side_nodes = add_midpoint_node(nodes, side_nodes)
+
+        bdy = self.boundary_nodes
+        for col in halo:
+            num_nodes = col.num_nodes
+            for i, corner in enumerate(col.node):
+                next_corner = col.node[(i + 1) % num_nodes]
+                if corner in bdy and next_corner in bdy:
+                    nodes = (corner, next_corner)
+                    side_nodes = add_midpoint_node(nodes, side_nodes)
+
+        for col in halo:
+
+            num_nodes = col.num_nodes
+            refined_sides = []
+            for i, corner in enumerate(col.node):
+                next_corner = col.node[(i + 1) % num_nodes]
+                ind = frozenset((corner.index, next_corner.index))
+                if ind in side_nodes: refined_sides.append(i)
+
+            num_refined, istart, irange = transition_type(num_nodes,
+                                                          refined_sides)
+            sub_cols = transition_column[num_nodes][num_refined, irange]
+            if any(['c' in local_nodes for local_nodes in sub_cols]):
+                centre_node = node(col.centre)
+                self.add_node(centre_node)
+
+            for local_nodes in sub_cols:
+                nodes = []
+                for vertex in local_nodes:
+                    if isinstance(vertex, int):
+                        n = col.node[(istart + vertex) % num_nodes]
+                    elif vertex == 'c':
+                        n = centre_node
+                    else:
+                        ind = frozenset([col.node[(istart + i) % num_nodes].index
+                                         for i in vertex])
+                        n = side_nodes[ind]
+                    nodes.append(n)
+                sub_col = column(nodes)
+                sub_col.layer = copy(col.layer)
+                self.add_column(sub_col)
+
+        while halo:
+            col = halo.pop()
+            self.delete_column(col)
+
+        self.setup(indices = True)
