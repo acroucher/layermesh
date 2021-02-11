@@ -397,6 +397,19 @@ class mesh(object):
         return bounds_of_points([node.pos for node in self.node])
     bounds = property(get_bounds)
 
+    def get_boundary_nodes(self):
+        """Returns set of nodes on the boundary of the mesh."""
+        bdy = set()
+        for col in self.column:
+            num_nodes = col.num_nodes
+            for i, nbr in enumerate(col.side_neighbours):
+                if nbr is None:
+                    i1 = (i + 1) % num_nodes
+                    for index in [i, i1]:
+                        bdy.add(col.node[index])
+        return bdy
+    boundary_nodes = property(get_boundary_nodes)
+
     def add_node(self, n):
         """Adds horizontal node to mesh."""
         self.node.append(n)
