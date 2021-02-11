@@ -121,21 +121,6 @@ class column(object):
         if self._centroid is not None:
             self._centroid += np.array(shift)
 
-    def identify_neighbours(self):
-        """Identifies neighbouring columns, i.e. those sharing two nodes."""
-        shared = {}
-        col_dict = {}
-        for n in self.node:
-            for col in n.column:
-                if col.index in shared: shared[col.index] += 1
-                else:
-                    col_dict[col.index] = col
-                    shared[col.index] = 1
-        del shared[self.index]
-        self.neighbour = set([col_dict[index] for index in shared
-                              if shared[index] == 2])
-        for col in self.neighbour: col.neighbour.add(self)
-
     def get_side_neighbours(self):
         """Returns a list of neighbouring columns corresponding to each column
         side (None if the column side is on a boundary)."""
