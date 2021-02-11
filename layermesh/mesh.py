@@ -418,6 +418,15 @@ class mesh(object):
             n.column.remove(col)
         self.column.remove(col)
 
+    def identify_column_neighbours(self):
+        """Identifies neighbours for each column."""
+        for col in self.column:
+            col.neighbour = set()
+            for n in col.node:
+                for nbr in n.column:
+                    if len(set(col.node) & set(nbr.node)) == 2:
+                        col.neighbour.add(nbr)
+
     def set_layer_columns(self, lay):
         """Populates list of columns for given layer."""
         lay.column = [col for col in self.column
