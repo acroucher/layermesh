@@ -431,8 +431,17 @@ class mesh(object):
         lay.column = [col for col in self.column
                       if self.column_in_layer(col, lay)]
 
-    def setup(self):
-        """Sets up internal mesh variables."""
+    def setup(self, indices = False):
+        """Sets up internal mesh variables, including node, column and layer
+        indices if needed."""
+
+        if indices:
+            def set_indices(v):
+                for i, item in enumerate(v):
+                    item.index = i
+            set_indices(self.node)
+            set_indices(self.column)
+            set_indices(self.layer)
 
         self.identify_column_neighbours()
 
