@@ -59,6 +59,11 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(col_sidenbrs(5), [4, 8, None, 2])
         self.assertEqual(col_sidenbrs(4), [3, 7, 5, 1])
 
+        self.assertEqual(12, len(m.boundary_nodes))
+        m.delete_column(m.column[4])
+        m.setup(indices = True)
+        self.assertEqual(16, len(m.boundary_nodes))
+
     def test_surface(self):
 
         dx = [10.]*3; dy = [12.] * 3
