@@ -1329,13 +1329,6 @@ class mesh(object):
             side_nodes = add_midpoint_node(nodes, side_nodes)
 
         bdy = self.boundary_nodes
-        for col in halo:
-            num_nodes = col.num_nodes
-            for i, corner in enumerate(col.node):
-                next_corner = col.node[(i + 1) % num_nodes]
-                if corner in bdy and next_corner in bdy:
-                    nodes = (corner, next_corner)
-                    side_nodes = add_midpoint_node(nodes, side_nodes)
 
         for col in halo:
 
@@ -1343,6 +1336,9 @@ class mesh(object):
             refined_sides = []
             for i, corner in enumerate(col.node):
                 next_corner = col.node[(i + 1) % num_nodes]
+                if corner in bdy and next_corner in bdy:
+                    nodes = (corner, next_corner)
+                    side_nodes = add_midpoint_node(nodes, side_nodes)
                 ind = frozenset((corner.index, next_corner.index))
                 if ind in side_nodes: refined_sides.append(i)
 
