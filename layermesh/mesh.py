@@ -408,7 +408,6 @@ class mesh(object):
         self.column.append(col)
         for n in col.node:
             n.column.add(col)
-        col.identify_neighbours()
 
     def delete_column(self, col):
         """Deletes specified column from the mesh."""
@@ -434,8 +433,12 @@ class mesh(object):
 
     def setup(self):
         """Sets up internal mesh variables."""
+
+        self.identify_column_neighbours()
+
         for lay in self.layer:
             self.set_layer_columns(lay)
+
         self.setup_cells()
 
     def setup_cells(self):
