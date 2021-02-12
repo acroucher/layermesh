@@ -391,6 +391,15 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(m.num_columns, 16 * 4 + 8 * 3 + 7 * 8)
         self.assertEqual(m.num_nodes, 5 * 17 + 8 * 9)
 
+        m = mesh.mesh(rectangular = (dx, dy, dz))
+        cols = m.columns_inside([(0,0), (400, 500)])
+        self.assertEqual(len(cols), 12)
+        m.refine(cols)
+        self.assertEqual(m.area, original_area)
+        self.assertTrue(np.allclose(m.centre, original_centre))
+        self.assertEqual(m.num_columns, 12 * 4 + 7 * 3 + 16 + 5 + 8 * 5)
+        self.assertEqual(m.num_nodes, 9 * 7 + 5 * 5 + 9 * 6)
+
 if __name__ == '__main__':
 
     suite = unittest.TestLoader().loadTestsFromTestCase(meshTestCase)
