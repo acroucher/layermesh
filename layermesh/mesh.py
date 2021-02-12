@@ -1318,27 +1318,38 @@ class mesh(object):
                                           ((2, 3), 3, (3, 0), 'c'))}}
 
         if columns is None: columns = self.column
-        halo = set(columns)
-        for col in columns: halo = halo | col.neighbour
-        faces = self.column_faces(halo)
+        columns = set(columns)
+        faces = self.column_faces(columns)
+        bdy = self.boundary_nodes
+
+        halo = set()
+        for col in columns:
+            halo_nbrs = col.neighbour - columns
+            halo = halo | halo_nbrs
+
+        for col in halo:
+            for nbr in col.neighbour & columns:
+                faces.add(frozenset((col.index, nbr.index)))
 
         side_nodes = {}
         for f in faces:
             cols = [self.column[i] for i in tuple(f)]
             nodes = tuple(set(cols[0].node) & set(cols[1].node))
             side_nodes = add_midpoint_node(nodes, side_nodes)
-
-        bdy = self.boundary_nodes
-
-        for col in halo:
-
+        for col in columns:
             num_nodes = col.num_nodes
-            refined_sides = []
             for i, corner in enumerate(col.node):
                 next_corner = col.node[(i + 1) % num_nodes]
                 if corner in bdy and next_corner in bdy:
                     nodes = (corner, next_corner)
                     side_nodes = add_midpoint_node(nodes, side_nodes)
+
+        for col in columns | halo:
+
+            num_nodes = col.num_nodes
+            refined_sides = []
+            for i, corner in enumerate(col.node):
+                next_corner = col.node[(i + 1) % num_nodes]
                 ind = frozenset((corner.index, next_corner.index))
                 if ind in side_nodes: refined_sides.append(i)
 
@@ -1365,6 +1376,9 @@ class mesh(object):
                 sub_col.layer = copy(col.layer)
                 self.add_column(sub_col)
 
+        while columns:
+            col = columns.pop()
+            self.delete_column(col)
         while halo:
             col = halo.pop()
             self.delete_column(col)
