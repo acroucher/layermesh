@@ -1266,16 +1266,16 @@ class mesh(object):
 
         from copy import copy
 
-        def add_midpoint_node(nodes, side_nodes):
+        def add_midpoint_node(nodes, midpoint_nodes):
             """Create node at midpoint between two nodes, and add it to the
-            dictionary of side nodes, indexed by the original node
+            dictionary of midpoint nodes, indexed by the original node
             indices."""
             midpos = 0.5 * (nodes[0].pos + nodes[1].pos)
             mid = node(midpos)
             self.add_node(mid)
             ind = frozenset((nodes[0].index, nodes[1].index))
-            side_nodes[ind] = mid
-            return side_nodes
+            midpoint_nodes[ind] = mid
+            return midpoint_nodes
 
         def transition_type(num_nodes, sides):
             """Returns transition type- classified by how many
@@ -1331,18 +1331,18 @@ class mesh(object):
             for nbr in col.neighbour & columns:
                 faces.add(frozenset((col.index, nbr.index)))
 
-        side_nodes = {}
+        midpoint_nodes = {}
         for f in faces:
             cols = [self.column[i] for i in tuple(f)]
             nodes = tuple(set(cols[0].node) & set(cols[1].node))
-            side_nodes = add_midpoint_node(nodes, side_nodes)
+            midpoint_nodes = add_midpoint_node(nodes, midpoint_nodes)
         for col in columns:
             num_nodes = col.num_nodes
             for i, corner in enumerate(col.node):
                 next_corner = col.node[(i + 1) % num_nodes]
                 if corner in bdy and next_corner in bdy:
                     nodes = (corner, next_corner)
-                    side_nodes = add_midpoint_node(nodes, side_nodes)
+                    midpoint_nodes = add_midpoint_node(nodes, midpoint_nodes)
 
         for col in columns | halo:
 
@@ -1351,7 +1351,7 @@ class mesh(object):
             for i, corner in enumerate(col.node):
                 next_corner = col.node[(i + 1) % num_nodes]
                 ind = frozenset((corner.index, next_corner.index))
-                if ind in side_nodes: refined_sides.append(i)
+                if ind in midpoint_nodes: refined_sides.append(i)
 
             num_refined, istart, irange = transition_type(num_nodes,
                                                           refined_sides)
@@ -1370,7 +1370,7 @@ class mesh(object):
                     else:
                         ind = frozenset([col.node[(istart + i) % num_nodes].index
                                          for i in vertex])
-                        n = side_nodes[ind]
+                        n = midpoint_nodes[ind]
                     nodes.append(n)
                 sub_col = column(nodes)
                 sub_col.layer = copy(col.layer)
