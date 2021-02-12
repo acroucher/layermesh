@@ -400,6 +400,14 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(m.num_columns, 12 * 4 + 7 * 3 + 16 + 5 + 8 * 5)
         self.assertEqual(m.num_nodes, 9 * 7 + 5 * 5 + 9 * 6)
 
+        m = mesh.mesh(rectangular = (dx, dy, dz))
+        m.rotate(30)
+        cols = [col for col in m.column if 400. < col.centre[1] < 600.]
+        m.refine(cols)
+        self.assertEqual(m.area, original_area)
+        self.assertEqual(m.num_columns, 189)
+        self.assertEqual(m.num_nodes, 169)
+
 if __name__ == '__main__':
 
     suite = unittest.TestLoader().loadTestsFromTestCase(meshTestCase)
