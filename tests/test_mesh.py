@@ -388,8 +388,8 @@ class meshTestCase(unittest.TestCase):
         m.refine(cols)
         self.assertEqual(m.area, original_area)
         self.assertTrue(np.allclose(m.centre, original_centre))
-        self.assertEqual(m.num_columns, 16 * 4 + 8 * 3 + 8 * 8)
-        self.assertEqual(m.num_nodes, 5 * 17 + 9 * 9)
+        self.assertEqual(m.num_columns, 16 * 4 + 8 * 3 + 7 * 8)
+        self.assertEqual(m.num_nodes, 5 * 17 + 8 * 9)
 
 if __name__ == '__main__':
 
