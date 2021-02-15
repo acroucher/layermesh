@@ -1410,3 +1410,47 @@ class mesh(object):
             self.delete_column(col)
 
         self.setup(indices = True)
+
+    def optimize(self, nodes = None):
+        """Adjusts horizontal positions of specified nodes to optimize the
+        mesh. If no nodes are specified, all node positions are
+        optimized."""
+
+        from scipy.optimize import leastsq
+
+        if nodes is None: nodes = self.node
+        nodes = list(nodes)
+        num_nodes = len(nodes)
+
+        columns = set()
+        for node in nodes:
+            columns = columns | node.column
+
+        faces = self.column_faces(columns)
+
+        halo = set()
+        for col in columns:
+            halo_nbrs = col.neighbour - columns
+            halo = halo | halo_nbrs
+
+        for col in halo:
+            for nbr in col.neighbour & columns:
+                faces.append(column_face([col, nbr]))
+
+        def update(x):
+            positions = x.reshape((num_nodes, 2))
+            for n, pos in zip(nodes, positions): n.pos = pos
+            for col in columns:
+                col._centroid = None
+
+        def f(x):
+            update(x)
+            angle_cosines = np.array([face.angle_cosine for face in faces])
+            return angle_cosines
+
+        x0 = np.array([n.pos for n in nodes]).reshape(2 * num_nodes)
+        x1, success = leastsq(f, x0)
+        if success > 4:
+            raise Exception('No convergence in optimize().')
+        update(x1)
+        for col in columns: col._area = None
