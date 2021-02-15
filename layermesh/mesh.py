@@ -747,6 +747,13 @@ class mesh(object):
             faces.append(face)
         return faces
 
+    def nodes_in_columns(self, columns):
+        """Returns set of nodes in the specified columns."""
+        nodes = set()
+        for col in columns:
+            nodes = nodes | set(col.node)
+        return nodes
+
     def translate(self, shift):
         """Translates mesh by specified 3-D shift vector."""
         if isinstance(shift, (list, tuple)): shift = np.array(shift)
