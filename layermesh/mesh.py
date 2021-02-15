@@ -137,6 +137,23 @@ class column(object):
         return nbrs
     side_neighbours = property(get_side_neighbours)
 
+class column_face(object):
+    """Face between two columns."""
+
+    def __init__(self, columns):
+        self.column = columns
+        self.node = list(set(columns[0].node) & set(columns[0].node))
+
+    def get_angle_cosine(self):
+        """Returns cosine of angle between the face and the line joining the
+        column centroids on either side."""
+        n = self.node[1].pos - self.node[0].pos
+        n = n / np.linalg.norm(n)
+        d = self.column[1].centre - self.column[0].centre
+        d = d / np.linalg.norm(d)
+        return np.dot(n, d)
+    angle_cosine = property(get_angle_cosine)
+
 class layer(object):
     """Mesh layer."""
 
@@ -711,18 +728,23 @@ class mesh(object):
     surface_cells = property(get_surface_cells)
 
     def column_faces(self, columns = None):
-        """Returns a set of mesh column faces, each one being a frozenset of
-        the two column indices on either side of a face. A list of the
-        columns may be optionally specified, otherwise all columns
-        will be included.
+        """Returns a list of the column faces between the specified columns. A
+        list of the columns may be optionally specified, otherwise all
+        columns will be included.
+
         """
         if columns is None: columns = self.column
         col_dict = {col.index: col for col in columns}
-        faces = set()
+        face_keys = set()
         for col in columns:
             for nbr in col.neighbour:
                 if nbr.index in col_dict:
-                    faces.add(frozenset([col.index, nbr.index]))
+                    face_keys.add(frozenset([col.index, nbr.index]))
+        faces = []
+        for key in face_keys:
+            cols = [self.column[col] for col in key]
+            face = column_face(cols)
+            faces.append(face)
         return faces
 
     def translate(self, shift):
@@ -1221,8 +1243,7 @@ class mesh(object):
 
         faces = self.column_faces(columns)
         for f in faces:
-            cols = tuple(f)
-            i = [col_dict[col] for col in cols]
+            i = [col_dict[col.index] for col in f.column]
             A[i[0], i[0]] += smoothing
             A[i[0], i[1]] -= smoothing
             A[i[1], i[1]] += smoothing
@@ -1329,19 +1350,17 @@ class mesh(object):
 
         for col in halo:
             for nbr in col.neighbour & columns:
-                faces.add(frozenset((col.index, nbr.index)))
+                faces.append(column_face([col, nbr]))
 
         midpoint_nodes = {}
         for f in faces:
-            cols = [self.column[i] for i in tuple(f)]
-            nodes = tuple(set(cols[0].node) & set(cols[1].node))
-            midpoint_nodes = add_midpoint_node(nodes, midpoint_nodes)
+            midpoint_nodes = add_midpoint_node(f.node, midpoint_nodes)
         for col in columns:
             num_nodes = col.num_nodes
             for i, corner in enumerate(col.node):
                 next_corner = col.node[(i + 1) % num_nodes]
                 if corner in bdy and next_corner in bdy:
-                    nodes = (corner, next_corner)
+                    nodes = [corner, next_corner]
                     midpoint_nodes = add_midpoint_node(nodes, midpoint_nodes)
 
         for col in columns | halo:
