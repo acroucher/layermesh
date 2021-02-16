@@ -142,7 +142,7 @@ class column_face(object):
 
     def __init__(self, columns):
         self.column = columns
-        self.node = list(set(columns[0].node) & set(columns[0].node))
+        self.node = list(set(columns[0].node) & set(columns[1].node))
 
     def get_angle_cosine(self):
         """Returns cosine of angle between the face and the line joining the
