@@ -1411,14 +1411,20 @@ class mesh(object):
 
         self.setup(indices = True)
 
-    def optimize(self, nodes = None):
+    def optimize(self, nodes = None, columns = None):
         """Adjusts horizontal positions of specified nodes to optimize the
         mesh. If no nodes are specified, all node positions are
-        optimized."""
+        optimized. If columns are specified, the positions of nodes in
+        those columns are optimized.
+        """
 
         from scipy.optimize import leastsq
 
-        if nodes is None: nodes = self.node
+        if nodes is None:
+            if columns is None:
+                nodes = self.node
+            else:
+                nodes = self.nodes_in_columns(columns)
         nodes = list(nodes)
         num_nodes = len(nodes)
 
