@@ -4,30 +4,11 @@ layermesh package
 Submodules
 ----------
 
-layermesh\.geometry module
---------------------------
+.. toctree::
 
-.. automodule:: layermesh.geometry
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-layermesh\.mesh module
-----------------------
-
-.. automodule:: layermesh.mesh
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-layermesh\.quadtree module
---------------------------
-
-.. automodule:: layermesh.quadtree
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
+   layermesh.geometry
+   layermesh.mesh
+   layermesh.quadtree
 
 Module contents
 ---------------
