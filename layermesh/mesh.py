@@ -1428,25 +1428,25 @@ class mesh(object):
         nodes = list(nodes)
         num_nodes = len(nodes)
 
-        columns = set()
+        cols = set()
         for node in nodes:
-            columns = columns | node.column
+            cols = cols | node.column
 
-        faces = self.column_faces(columns)
+        faces = self.column_faces(cols)
 
         halo = set()
-        for col in columns:
-            halo_nbrs = col.neighbour - columns
+        for col in cols:
+            halo_nbrs = col.neighbour - cols
             halo = halo | halo_nbrs
 
         for col in halo:
-            for nbr in col.neighbour & columns:
+            for nbr in col.neighbour & cols:
                 faces.append(column_face([col, nbr]))
 
         def update(x):
             positions = x.reshape((num_nodes, 2))
             for n, pos in zip(nodes, positions): n.pos = pos
-            for col in columns:
+            for col in cols:
                 col._centroid = None
 
         def f(x):
@@ -1459,4 +1459,4 @@ class mesh(object):
         if success > 4:
             raise Exception('No convergence in optimize().')
         update(x1)
-        for col in columns: col._area = None
+        for col in cols: col._area = None
