@@ -1485,18 +1485,17 @@ class mesh(object):
                 col._centroid = None
 
         def f(x):
-
             update(x)
             result = []
-
             if 'orthogonal' in weight:
                 angle_cosines = [face.angle_cosine for face in faces]
                 result += list(weight['orthogonal'] * np.array(angle_cosines))
-
             if 'skewness' in weight:
                 skewness = [col.angle_ratio - 1 for col in cols]
                 result += list(weight['skewness'] * np.array(skewness))
-
+            if 'aspect' in weight:
+                aspect = [col.side_ratio - 1 for col in cols]
+                result += list(weight['aspect'] * np.array(aspect))
             return np.array(result)
 
         x0 = np.array([n.pos for n in nodes]).reshape(2 * num_nodes)
