@@ -66,6 +66,12 @@ class meshTestCase(unittest.TestCase):
         m.setup(indices = True)
         self.assertEqual(16, len(m.boundary_nodes))
 
+        m = mesh.mesh(rectangular = (dx, dy, dz))
+        for col in m.column:
+            a = col.interior_angles
+            self.assertTrue(np.allclose(a, 0.5 * np.pi))
+            self.assertEqual(1, col.angle_ratio)
+
     def test_surface(self):
 
         dx = [10.]*3; dy = [12.] * 3

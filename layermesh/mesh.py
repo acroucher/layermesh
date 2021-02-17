@@ -83,6 +83,24 @@ class column(object):
         return bounds_of_points([n.pos for n in self.node])
     bounding_box = property(get_bounding_box)
 
+    def get_interior_angles(self):
+        """Returns array of interior angle for each node in the column."""
+        side = np.array([n.pos - self.node[i - 1].pos
+                         for i, n in enumerate(self.node)])
+        costheta = np.array([np.dot(s, side[i - 1]) / \
+                             (np.linalg.norm(s) * np.linalg.norm(side[i - 1]))
+                             for i, s in enumerate(side)])
+        return np.pi - np.arccos(costheta)
+    interior_angles = property(get_interior_angles)
+
+    def get_angle_ratio(self):
+        """Returns the angle ratio for the column, defined as the ratio of the
+        largest interior angle to the smallest interior angle.
+        """
+        angles = self.interior_angles
+        return np.max(angles) / np.min(angles)
+    angle_ratio = property(get_angle_ratio)
+
     def set_layers(self, layers, num_layers):
         """Sets column layers to be the last num_layers layers from the
         specified list."""
