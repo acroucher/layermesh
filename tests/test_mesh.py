@@ -417,6 +417,23 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(m.num_columns, 189)
         self.assertEqual(m.num_nodes, 169)
 
+    def test_optimize(self):
+
+        dx, dy, dz = [100]*10, [150]*8, [10]*3
+        m = mesh.mesh(rectangular = (dx, dy, dz))
+        original_area = m.area
+
+        cols = m.columns_inside([(400, 400), (600, 600)])
+        m.refine(cols)
+
+        triangles = [col for col in m.column if col.num_nodes == 3]
+        m.optimize(columns = triangles)
+
+        self.assertTrue(np.allclose(m.area, original_area))
+        faces = m.column_faces()
+        cosines = np.array([f.angle_cosine for f in faces])
+        self.assertTrue(np.max(np.abs(cosines)) < 0.1)
+
 if __name__ == '__main__':
 
     suite = unittest.TestLoader().loadTestsFromTestCase(meshTestCase)
