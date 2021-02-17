@@ -71,6 +71,7 @@ class meshTestCase(unittest.TestCase):
             a = col.interior_angles
             self.assertTrue(np.allclose(a, 0.5 * np.pi))
             self.assertEqual(1, col.angle_ratio)
+            self.assertEqual(dy[0] / dx[0], col.side_ratio)
 
     def test_surface(self):
 
