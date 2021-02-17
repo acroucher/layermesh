@@ -10,6 +10,7 @@ Layermesh user guide
    :maxdepth: 2
    :caption: Contents:
 
+   intro
    modules
 
 .. only:: html
