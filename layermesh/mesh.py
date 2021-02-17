@@ -1,6 +1,6 @@
-"""Layered computational meshes.
+"""Layered computational meshes."""
 
-Copyright 2019 University of Auckland.
+"""Copyright 2019 University of Auckland.
 
 This file is part of layermesh.
 

@@ -1,6 +1,6 @@
-"""Quadtrees for spatial searching in 2D meshes.
+"""Quadtrees for spatial searching in 2D meshes."""
 
-Copyright 2021 University of Auckland.
+"""Copyright 2021 University of Auckland.
 
 This file is part of layermesh.
 
