@@ -1429,7 +1429,8 @@ class mesh(object):
 
         self.setup(indices = True)
 
-    def optimize(self, nodes = None, columns = None):
+    def optimize(self, nodes = None, columns = None,
+                 weight = {'orthogonal': 1}):
         """Adjusts horizontal positions of specified nodes to optimize the
         mesh. If no nodes are specified, all node positions are
         optimized. If columns are specified, the positions of nodes in
@@ -1468,9 +1469,19 @@ class mesh(object):
                 col._centroid = None
 
         def f(x):
+
             update(x)
-            angle_cosines = np.array([face.angle_cosine for face in faces])
-            return angle_cosines
+            result = []
+
+            if 'orthogonal' in weight:
+                angle_cosines = [face.angle_cosine for face in faces]
+                result += list(weight['orthogonal'] * np.array(angle_cosines))
+
+            if 'skewness' in weight:
+                skewness = [col.angle_ratio - 1 for col in cols]
+                result += list(weight['skewness'] * np.array(skewness))
+
+            return np.array(result)
 
         x0 = np.array([n.pos for n in nodes]).reshape(2 * num_nodes)
         x1, success = leastsq(f, x0)
