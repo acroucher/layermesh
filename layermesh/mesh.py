@@ -15,135 +15,158 @@ import numpy as np
 default_cell_type_sort = -1 # decreasing
 
 class node(object):
-    """2-D mesh node."""
+    """2-D mesh node. On creation, the node's horizontal position (and
+    optionally index) are specified.
+    """
 
     def __init__(self, pos, index = None):
-        self.pos = np.array(pos)
-        self.index = index
-        self.column = set()
+        self.pos = np.array(pos) #: Array containing the node's horizontal position.
+        self.index = index #: Integer containing the node's index in the mesh.
+        self.column = set() #: Set containing the column objects the node belongs to.
 
     def __repr__(self):
         return str(list(self.pos))
 
 class column(object):
-    """Mesh column."""
+    """Mesh column. On creation, the column's nodes (and optionally index)
+    are specified."""
 
     def __init__(self, node, index = None):
-        self.node = node
-        self.index = index
+        self.node = node #: List of the node objects in the column.
+        self.index = index #: Integer containing the column's index in the mesh.
         self._centroid = None
         self._area = None
+        #: Set containing the neighbouring columns (those that share a face).
         self.neighbour = set()
+        #: List of layers in the column.
+        self.layer = None
+        #: List of cells in the column.
+        self.cell = None
 
     def __repr__(self):
         return str(self.index)
 
-    def get_num_nodes(self): return len(self.node)
-    num_nodes = property(get_num_nodes)
+    def _get_num_nodes(self): return len(self.node)
+    num_nodes = property(_get_num_nodes) #: Number of nodes in the column.
 
-    def get_num_layers(self): return len(self.layer)
-    num_layers = property(get_num_layers)
+    def _get_num_layers(self): return len(self.layer)
+    num_layers = property(_get_num_layers) #: Number of layers in the column.
 
-    def get_num_cells(self): return len(self.cell)
-    num_cells = property(get_num_cells)
+    def _get_num_cells(self): return len(self.cell)
+    num_cells = property(_get_num_cells) #: Number of cells in the column.
 
-    def get_num_neighbours(self): return len(self.neighbour)
-    num_neighbours = property(get_num_neighbours)
+    def _get_num_neighbours(self): return len(self.neighbour)
+    #: Number of neighbouring columns (those that share a face).
+    num_neighbours = property(_get_num_neighbours)
 
-    def get_polygon(self):
-        """Returns polygon formed by column node positions."""
+    def _get_polygon(self):
         return [node.pos for node in self.node]
-    polygon = property(get_polygon)
+        #: Polygon (list of arrays of length 2) formed by column node positions.
+    polygon = property(_get_polygon)
 
-    def get_centroid(self):
-        """Returns column centroid."""
+    def _get_centroid(self):
         if self._centroid is None:
             from layermesh.geometry import polygon_centroid
             self._centroid = polygon_centroid(self.polygon)
         return self._centroid
-    centroid = property(get_centroid)
-    centre = property(get_centroid)
+    #: Column centroid.
+    centroid = property(_get_centroid)
+    #: Column centroid.
+    centre = property(_get_centroid)
 
-    def get_area(self):
-        """Returns column area."""
+    def _get_area(self):
         if self._area is None:
             from layermesh.geometry import polygon_area
             self._area = polygon_area(self.polygon)
         return self._area
-    area = property(get_area)
+    #: Area of column.
+    area = property(_get_area)
 
-    def get_volume(self):
-        """Returns column volume."""
+    def _get_volume(self):
         return self.area * sum([lay.thickness for lay in self.layer])
-    volume = property(get_volume)
+    #: Column volume.
+    volume = property(_get_volume)
 
-    def get_bounding_box(self):
-        """Returns column horizontal bounding box."""
+    def _get_bounding_box(self):
         from layermesh.geometry import bounds_of_points
         return bounds_of_points([n.pos for n in self.node])
-    bounding_box = property(get_bounding_box)
+    #: Horizontal bounding box of column.
+    bounding_box = property(_get_bounding_box)
 
-    def get_interior_angles(self):
-        """Returns array of interior angle for each node in the column."""
+    def _get_interior_angle(self):
         side = np.array([n.pos - self.node[i - 1].pos
                          for i, n in enumerate(self.node)])
         costheta = np.array([np.dot(s, side[i - 1]) / \
                              (np.linalg.norm(s) * np.linalg.norm(side[i - 1]))
                              for i, s in enumerate(side)])
         return np.pi - np.arccos(costheta)
-    interior_angles = property(get_interior_angles)
+    #: Array of interior angles for each node in the column.
+    interior_angle = property(_get_interior_angle)
 
-    def get_angle_ratio(self):
-        """Returns the angle ratio for the column, defined as the ratio of the
-        largest interior angle to the smallest interior angle.
-        """
-        angles = self.interior_angles
+    def _get_angle_ratio(self):
+        angles = self.interior_angle
         return np.max(angles) / np.min(angles)
-    angle_ratio = property(get_angle_ratio)
+    #: Angle ratio, defined as the ratio of the largest interior angle
+    #: to the smallest interior angle.
+    #:
+    #: This can be used as a measure
+    #: of the skewness of the column, with values near 1 being less
+    #: skewed.
+    angle_ratio = property(_get_angle_ratio)
 
-    def get_side_lengths(self):
-        "Returns array of side lengths for the column"
+    def _get_face_length(self):
         return np.array([np.linalg.norm(
             n.pos - self.node[i - 1].pos)
             for i, n in enumerate(self.node)])
-    side_lengths = property(get_side_lengths)
+    #: Array of lengths of the column faces.
+    face_length = property(_get_face_length)
 
-    def get_side_ratio(self):
-        """Returns the side ratio for the column, defined as the ratio of the
-        largest side length to the smallest side length (a
-        generalisation of the aspect ratio for quadrilateral columns).
-        """
-        l = self.side_lengths
+    def _get_face_length_ratio(self):
+        l = self.face_length
         return np.max(l) / np.min(l)
-    side_ratio = property(get_side_ratio)
+    #: Face length ratio, defined as the ratio of the
+    #: longest face length to the shortest face length (a
+    #: generalisation of the aspect ratio for quadrilateral columns).
+    face_length_ratio = property(_get_face_length_ratio)
 
     def set_layers(self, layers, num_layers):
-        """Sets column layers to be the last num_layers layers from the
+        """Sets column layers to be the last *num_layers* layers from the
         specified list."""
         istart = len(layers) - num_layers
         self.layer = layers[istart:]
 
     def set_surface(self, layers, surface = None):
-        """Sets column layers from specified surface elevation."""
+        """Sets column layers from the given list, according to the specified
+        surface elevation.
+
+        If *surface* = *None*, then the column is assigned all layers
+        in the list. Otherwise, it is assigned all layers with centres
+        below the specified surface elevation.
+
+        """
         if surface is None: self.layer = layers
         else:
             self.layer = [lay for lay in layers
                           if lay.centre <= surface]
 
-    def get_surface(self):
-        """Returns surface elevation of column."""
+    def _get_surface(self):
         return self.layer[0].top
-    surface = property(get_surface)
+    #: Surface elevation of the column, given by the top elevation of its uppermost layer.
+    #: (This property is read-only: use **set_surface()** or **set_layers()**
+    #: to set the layers in the column.)
+    surface = property(_get_surface)
 
     def contains(self, pos):
-        """Returns True if the column contains the 2-D point pos (tuple, list or
-        numpy array of length 2)."""
+        """Returns *True* if the column contains the 2-D point pos (tuple, list or
+        array of length 2)."""
         from layermesh.geometry import in_polygon
         return in_polygon(np.array(pos), self.polygon)
 
     def inside(self, polygon):
         """Returns true if the centre of the column is inside the specified
-        polygon."""
+        polygon (a list of horizontal positions, specified as tuples,
+        lists or arrays of length 2).
+        """
         from layermesh.geometry import in_rectangle, in_polygon
         if len(polygon) == 2:
             return in_rectangle(self.centre, polygon)
@@ -151,13 +174,12 @@ class column(object):
             return in_polygon(self.centre, polygon)
 
     def translate(self, shift):
-        """Translates column horizontally by the specified shift array."""
+        """Translates column horizontally by the specified shift array (a
+        tuple, list or array of length 2)."""
         if self._centroid is not None:
             self._centroid += np.array(shift)
 
-    def get_side_neighbours(self):
-        """Returns a list of neighbouring columns corresponding to each column
-        side (None if the column side is on a boundary)."""
+    def _get_side_neighbour(self):
         nbrs = []
         for i, nodei in enumerate(self.node):
             i1 = (i + 1) % self.num_nodes
@@ -169,79 +191,93 @@ class column(object):
                     break
             nbrs.append(nbr)
         return nbrs
-    side_neighbours = property(get_side_neighbours)
+    #: List of neighbouring columns corresponding to each column
+    #: side (or None if the column side is on a boundary).
+    side_neighbour = property(_get_side_neighbour)
 
 class column_face(object):
-    """Face between two columns."""
+    """Face between two columns. On creation, the two columns on either side
+    of the face are specified."""
 
-    def __init__(self, columns):
-        self.column = columns
-        self.node = list(set(columns[0].node) & set(columns[1].node))
+    def __init__(self, column):
+        #: List or tuple of column objects on either side of the face.
+        self.column = column
+        #: List of node objects at either end of the face.
+        self.node = list(set(column[0].node) & set(column[1].node))
 
-    def get_angle_cosine(self):
-        """Returns cosine of angle between the face and the line joining the
-        column centroids on either side."""
+    def _get_angle_cosine(self):
         n = self.node[1].pos - self.node[0].pos
         n = n / np.linalg.norm(n)
         d = self.column[1].centre - self.column[0].centre
         d = d / np.linalg.norm(d)
         return np.dot(n, d)
-    angle_cosine = property(get_angle_cosine)
+    #: Cosine of angle between the face and the line joining the
+    #: column centroids on either side.
+    #:
+    #: This can be used to measure the orthogonality of the face:
+    #: orthogonal faces have angle cosine zero.
+    angle_cosine = property(_get_angle_cosine)
 
 class layer(object):
-    """Mesh layer."""
+    """Mesh layer. On creation, the bottom and top elevations of the layer
+    (and optionally the layer index) are specified."""
 
     def __init__(self, bottom, top, index = None):
-        self.bottom = bottom
-        self.top = top
-        self.index = index
+        self.bottom = bottom #: Bottom elevation of the layer.
+        self.top = top #: Top elevation of the layer.
+        self.index = index #: Layer index in the mesh (numbered from top down).
         self._centre = None
+        #: Quadtree object for column searching within the layer.
         self.quadtree = None
 
     def __repr__(self):
         return str(self.index)
 
-    def get_num_columns(self): return len(self.column)
-    num_columns = property(get_num_columns)
+    def _get_num_columns(self): return len(self.column)
+    #: Number of columns in the layer.
+    num_columns = property(_get_num_columns)
 
-    def get_num_cells(self): return len(self.cell)
-    num_cells = property(get_num_cells)
+    def _get_num_cells(self): return len(self.cell)
+    #: Number of cells in the layer.
+    num_cells = property(_get_num_cells)
 
-    def get_nodes(self):
-        """Returns set of nodes in layer."""
+    def _get_node(self):
         nodes = set()
         for col in self.column:
             for n in col.node: nodes.add(n)
         return nodes
-    node = property(get_nodes)
+    #: Set of nodes in the layer.
+    node = property(_get_node)
 
-    def get_centre(self):
-        """Returns layer centre."""
+    def _get_centre(self):
         if self._centre is None:
             self._centre = 0.5 * (self.bottom + self.top)
         return self._centre
-    centre = property(get_centre)
+    #: Elevation of layer centre.
+    centre = property(_get_centre)
 
-    def get_thickness(self):
-        """Returns layer thickness."""
+    def _get_thickness(self):
         return self.top - self.bottom
-    thickness = property(get_thickness)
+    #: Vertical thickness of layer.
+    thickness = property(_get_thickness)
 
-    def get_area(self):
-        """Returns area of layer."""
+    def _get_area(self):
         return sum([col.area for col in self.column])
-    area = property(get_area)
+    #: Horizontal area of layer.
+    area = property(_get_area)
 
-    def get_volume(self):
-        """Returns volume of layer."""
+    def _get_volume(self):
         return self.area * self.thickness
-    volume = property(get_volume)
+    #: Volume of layer.
+    volume = property(_get_volume)
 
-    def get_horizontal_bounds(self):
-        """Returns horizontal bounding box for layer."""
+    def _get_horizontal_bounds(self):
         from layermesh.geometry import bounds_of_points
         return bounds_of_points([n.pos for n in self.node])
-    horizontal_bounds = property(get_horizontal_bounds)
+    #: Horizontal bounding box for layer (list of two arrays of length 2,
+    #: representing the bottom left and top right corner coordinates of the
+    #: bounding box).
+    horizontal_bounds = property(_get_horizontal_bounds)
 
     def setup_quadtree(self):
         """Sets up quadtree for column searching."""
@@ -250,7 +286,8 @@ class layer(object):
                                           self.column)
 
     def translate(self, shift):
-        """Translates layer by specified 3-D shift vector."""
+        """Translates layer by specified 3-D shift (a tuple, list or array of
+        length 3)."""
         self.bottom += shift[2]
         self.top += shift[2]
         if self._centre is not None:
@@ -259,14 +296,14 @@ class layer(object):
             self.quadtree.translate(shift[:2])
 
     def contains(self, z):
-        """Returns True if layer contains specified elevation z, or False
+        """Returns *True* if layer contains specified elevation *z*, or *False*
         otherwise."""
         return self.bottom <= z <= self.top
 
     def cell_containing(self, pos):
-        """Returns cell in layer with column containing the 2-D point pos (a
-        tuple, list or numpy array of length 2). If no column in the
-        layer contains this point then None is returned.
+        """Returns cell in layer with column containing the 2-D point *pos* (a
+        tuple, list or array of length 2). If no column in the
+        layer contains this point then *None* is returned.
         """
 
         if self.quadtree is None: self.setup_quadtree()
@@ -277,24 +314,34 @@ class layer(object):
 
     def columns_inside(self, polygon):
         """Returns a list of columns in the layer which are inside the
-        specified polygon."""
+        specified polygon (a list or tuple of points, each defined by
+        a tuple, list or array of length 2).
+        """
         return [col for col in self.column if col.inside(polygon)]
 
     def cells_inside(self, polygon):
         """Returns a list of cells in the layer with columns inside the
-        specified polygon."""
+        specified polygon (a list or tuple of points, each defined by
+        a tuple, list or array of length 2)."""
         return [c for c in self.cell if c.column.inside(polygon)]
 
     def find(self, match, indices = False):
         """Returns cell or cells in the layer satifying the specified matching
-        criterion. The match parameter can be a function taking a cell
+        criterion.
+
+        The match parameter can be a function taking a cell
         and returning a Boolean, in which case a list of matching
-        cells is returned. Alternatively it can be a 2-D point (tuple,
-        list or numpy array), in which case the cell with column
-        containing the point is returned, or a 2-D polygon, in which
-        case a list of cells with columns inside the polygon is
-        returned.  If indices is True, the cell indices are returned
+        cells is returned.
+
+        Alternatively it can be a 2-D point (tuple, list or array), in
+        which case the cell with column containing the point is
+        returned, or a polygon (a tuple or list of points, each
+        defined as a tuple, list or array of length 2), in which case
+        a list of cells with columns inside the polygon is returned.
+
+        If indices is *True*, the cell indices are returned
         rather than the cells themselves.
+
         """
 
         if isinstance(match, (tuple, list)) and \
@@ -322,45 +369,66 @@ class layer(object):
             raise Exception('Unrecognised match type.')
 
 class cell(object):
-    """Mesh cell."""
+    """Mesh cell. On creation, the layer and column defining the cell (and
+    optionally the cell index) are specified."""
 
     def __init__(self, lay, col, index = None):
-        self.layer = lay
-        self.column = col
-        self.index = index
+        self.layer = lay #: Cell layer object.
+        self.column = col #: Cell column object.
+        self.index = index #: Index of the cell in the mesh.
 
     def __repr__(self):
         return str(self.index)
 
-    def get_volume(self):
-        """Returns cell volume."""
+    def _get_volume(self):
         return self.layer.thickness * self.column.area
-    volume = property(get_volume)
+    #: Volume of cell.
+    volume = property(_get_volume)
 
-    def get_centroid(self):
-        """Returns cell centroid."""
+    def _get_centroid(self):
         return np.concatenate([self.column.centroid,
                                np.array([self.layer.centre])])
-    centroid = property(get_centroid)
-    centre = property(get_centroid)
+    #: Centroid of cell.
+    centroid = property(_get_centroid)
+    #: Centroid of cell.
+    centre = property(_get_centroid)
 
-    def get_surface(self):
-        """Returns True if cell is at surface of mesh, False otherwise."""
+    def _get_surface(self):
         return self == self.column.cell[0]
-    surface = property(get_surface)
+    #: *True* if the cell is at the surface of the mesh, *False* otherwise.
+    surface = property(_get_surface)
 
-    def get_num_nodes(self):
-        """Returns number of nodes in the cell."""
+    def _get_num_nodes(self):
         return 2 * self.column.num_nodes
-    num_nodes = property(get_num_nodes)
+    #: Number of nodes in the cell.
+    num_nodes = property(_get_num_nodes)
 
 class mesh(object):
-    """Layered computational mesh."""
+    """A mesh can be created either by reading it from a file, or via
+        other parameters.
+
+        If *filename* is specified, the mesh is read from the given
+        HDF5 file.
+
+        Otherwise, a rectangular mesh can be created using the
+        *rectangular* parameter. Mesh spacings in the three coordinate
+        directions are specified via tuples, lists or arrays of
+        spacings. The *rectangular* parameter is itself a tuple or
+        list of three of these mesh spacing specifications.
+
+        The surface elevations can be specified using the *surface*
+        parameter. This can be either a dictionary of pairs of column
+        indices and corresponding surface elevations, or a tuple, list
+        or array of surface elevations for all columns. If *None* is
+        specified (the default) then all column surfaces will be set
+        to the top of the uppermost layer.
+
+        By default, mesh cells are ordered first by layer and then by
+        column.
+
+    """
 
     def __init__(self, filename = None, **kwargs):
-
-        """Initialize layered mesh either from file or via other
-        parameters."""
 
         if filename is not None: self.read(filename)
         else:
@@ -438,7 +506,7 @@ class mesh(object):
         bdy = set()
         for col in self.column:
             num_nodes = col.num_nodes
-            for i, nbr in enumerate(col.side_neighbours):
+            for i, nbr in enumerate(col.side_neighbour):
                 if nbr is None:
                     i1 = (i + 1) % num_nodes
                     for index in [i, i1]:
@@ -620,12 +688,12 @@ class mesh(object):
                     col.set_surface(self.layer, surface[col.index])
                 else:
                     col.set_surface(self.layer)
-        elif isinstance(surface, (list, np.ndarray)):
+        elif isinstance(surface, (tuple, list, np.ndarray)):
              if len(surface) == self.num_columns:
                  for col, s in zip(self.column, surface):
                      col.set_surface(self.layer, s)
              else:
-                 raise Exception('surface is the wrong size.')
+                 raise Exception('Surface is the wrong size.')
         else:
             raise Exception('Unrecognized surface parameter type.')
         self.setup()
@@ -830,7 +898,7 @@ class mesh(object):
                 return None
 
     def find_column(self, pos):
-        """Returns column containing point pos (list, tuple or numpy array of
+        """Returns column containing point pos (list, tuple or array of
         length 2), or None if pos is outside the mesh."""
         if self.num_layers == 0:
             return None
@@ -839,7 +907,7 @@ class mesh(object):
             return c if c is None else c.column
 
     def find_cell(self, pos):
-        """Returns cell containing point pos (list, tuple or numpy array of
+        """Returns cell containing point pos (list, tuple or array of
         length 3), or None if pos is outside the mesh."""
 
         lay = self.find_layer(pos[2])
@@ -853,11 +921,11 @@ class mesh(object):
         criterion. The match parameter can be a function taking a cell
         and returning a Boolean, in which case a list of matching
         cells is returned. Alternatively it can be a 3-D point (tuple,
-        list or numpy array), in which case the cell containing the
+        list or array), in which case the cell containing the
         point is returned, or a 2-D point, in which case the column
         containing the point is returned, or a 1-D point or scalar,
         in which case the layer containing the elevation is returned.
-        If indices is True, the cell (or column or layer) indices are
+        If indices is *True*, the cell (or column or layer) indices are
         returned rather than the cells, columns or layers themselves.
         """
 
@@ -890,7 +958,7 @@ class mesh(object):
 
     def columns_inside(self, polygon, indices = False):
         """Returns a list of mesh columns inside the specified polygon. If
-        indices is True, column indices are returned instead of columns."""
+        indices is *True*, column indices are returned instead of columns."""
 
         cols = self.layer[-1].columns_inside(polygon)
         return [col.index for col in cols] if indices else cols
@@ -899,8 +967,8 @@ class mesh(object):
         """Returns a list of cells in the mesh with columns inside the
         specified polygon. Specifying the elevations parameter as a two-element
         list, tuple or array means only cells inside that elevation range are returned.
-        If sort is True, the returned cells are sorted by cell index. If indices is
-        True, cell indices are returned instead of cells."""
+        If sort is *True*, the returned cells are sorted by cell index. If indices is
+        *True*, cell indices are returned instead of cells."""
 
         cols = self.columns_inside(polygon)
         cells = []
@@ -998,7 +1066,7 @@ class mesh(object):
             column."""
             track = []
             cols, more, inpos = set(), True, pos
-            colnbr, nextcol = col.side_neighbours, None
+            colnbr, nextcol = col.side_neighbour, None
             lined = np.linalg.norm(linesegment[1] - linesegment[0])
             while more:
                 cols.add(col)
@@ -1023,7 +1091,7 @@ class mesh(object):
                 else:
                     nextcol, more = next_neighbour_column(nbr_base_col, more, cols)
                 col = nextcol
-                if col: colnbr = col.side_neighbours
+                if col: colnbr = col.side_neighbour
                 else: more = False
 
             return track
@@ -1494,7 +1562,7 @@ class mesh(object):
                 skewness = [col.angle_ratio - 1 for col in cols]
                 result += list(weight['skewness'] * np.array(skewness))
             if 'aspect' in weight:
-                aspect = [col.side_ratio - 1 for col in cols]
+                aspect = [col.face_length_ratio - 1 for col in cols]
                 result += list(weight['aspect'] * np.array(aspect))
             return np.array(result)
 

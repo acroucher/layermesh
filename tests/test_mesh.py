@@ -56,7 +56,7 @@ class meshTestCase(unittest.TestCase):
 
         def col_sidenbrs(index):
             return [None if col is None else col.index
-                 for col in m.column[index].side_neighbours]
+                 for col in m.column[index].side_neighbour]
         self.assertEqual(col_sidenbrs(0), [None, 3, 1, None])
         self.assertEqual(col_sidenbrs(5), [4, 8, None, 2])
         self.assertEqual(col_sidenbrs(4), [3, 7, 5, 1])
@@ -68,10 +68,10 @@ class meshTestCase(unittest.TestCase):
 
         m = mesh.mesh(rectangular = (dx, dy, dz))
         for col in m.column:
-            a = col.interior_angles
+            a = col.interior_angle
             self.assertTrue(np.allclose(a, 0.5 * np.pi))
             self.assertEqual(1, col.angle_ratio)
-            self.assertEqual(dy[0] / dx[0], col.side_ratio)
+            self.assertEqual(dy[0] / dx[0], col.face_length_ratio)
 
     def test_surface(self):
 
