@@ -430,9 +430,13 @@ class mesh(object):
 
     def __init__(self, filename = None, **kwargs):
 
+        self.node = []
+        self.column = []
+        self.layer = []
+        self.cell = []
+
         if filename is not None: self.read(filename)
         else:
-            self.empty()
             self.cell_type_sort = kwargs.get('cell_type_sort',
                                              default_cell_type_sort)
             rectangular = kwargs.get('rectangular', None)
@@ -448,14 +452,6 @@ class mesh(object):
     def __repr__(self):
         return '%d columns, %d layers, %d cells' % \
             (self.num_columns, self.num_layers, self.num_cells)
-
-    def empty(self):
-        """Empties data arrays."""
-        self.cell_type_sort = default_cell_type_sort
-        self.node = []
-        self.column = []
-        self.layer = []
-        self.cell = []
 
     def get_num_nodes(self):
         """Returns number of 2-D nodes in mesh."""
@@ -756,7 +752,6 @@ class mesh(object):
     def read(self, filename):
         """Reads mesh from HDF5 file."""
         import h5py
-        self.empty()
         num_layers = None
         with h5py.File(filename, 'r') as f:
             if 'cell' in f:
