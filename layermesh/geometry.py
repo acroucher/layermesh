@@ -13,7 +13,11 @@ You should have received a copy of the GNU Lesser General Public License along w
 import numpy as np
 
 def in_polygon(pos, polygon):
-    """Tests if the (2-D) point a lies within a given polygon."""
+    """Tests if the point *pos* (a tuple, list or array of length 2) a
+    lies within a given polygon (a tuple or list of points, each
+    itself a tuple, list or array of length 2).
+
+    """
     if len(polygon) == 2:
         return in_rectangle(pos, polygon)
     else:
@@ -35,18 +39,21 @@ def in_polygon(pos, polygon):
         return (numcrossings % 2)
 
 def in_rectangle(pos, rect):
-    """Tests if the 2-D point lies in an axis-aligned rectangle, defined
-    as a two-element list of arrays [bottom left, top right].
+    """Tests if the point *pos* lies in an axis-aligned rectangle, defined
+    as a two-element tuple or list of points [bottom left, top right],
+    each itself a tuple, list or array of length 2.
+
     """
     return all([rect[0][i] <= pos[i] <= rect[1][i] for i in range(2)])
 
 def rectangles_intersect(rect1, rect2):
-    """Returns True if two rectangles intersect."""
+    """Returns *True* if two rectangles intersect."""
     return all([(rect1[1][i] >= rect2[0][i]) and
                 (rect2[1][i] >= rect1[0][i]) for i in range(2)])
 
 def sub_rectangles(rect):
-    """Returns the sub-rectangles formed by subdividing the given rectangle evenly in four."""
+    """Returns the sub-rectangles formed by subdividing the given
+    rectangle evenly in four."""
     centre = 0.5 * (rect[0] + rect[1])
     r0 = [rect[0], centre]
     r1 = [np.array([centre[0], rect[0][1]]), np.array([rect[1][0], centre[1]])]
@@ -55,7 +62,8 @@ def sub_rectangles(rect):
     return [r0, r1, r2, r3]
 
 def bounds_of_points(points):
-    """Returns bounding box around the specified 2D points."""
+    """Returns bounding box around the specified tuple, list, array or set
+    of points, each one a tuple, list or array of length 2."""
     bottomleft = np.array([min([pos[i] for pos in points]) for i in range(2)])
     topright = np.array([max([pos[i] for pos in points]) for i in range(2)])
     return [bottomleft, topright]
@@ -66,7 +74,9 @@ def rect_to_poly(rect):
             rect[1], np.array(rect[0][0], rect[1][1])]
 
 def polygon_area(polygon):
-    """Calculates the (unsigned) area of an arbitrary polygon."""
+    """Calculates the (unsigned) area of an arbitrary polygon (a tuple,
+    list or array of points, each one a tuple, list or array of length
+    2)."""
     area = 0.0
     n = len(polygon)
     if n > 0:
@@ -78,7 +88,9 @@ def polygon_area(polygon):
     return 0.5 * abs(area)
 
 def polygon_centroid(polygon):
-    """Calculates the centroid of an arbitrary polygon."""
+    """Calculates the centroid of an arbitrary polygon (a tuple, list or
+    array of points, each one a tuple, list or array of length 2).
+    """
     c, area = np.zeros(2), 0.
     poly = [np.array(v, dtype = float) for v in polygon]
     n = len(poly)
@@ -133,8 +145,10 @@ def line_polygon_intersections(polygon, line, bound_line = (True,True),
     else: return [crossings[i] for i in sortindex]
 
 def polyline_polygon_intersections(polygon, polyline):
-    """Returns a list of intersection points at which a polyline (list of
-    2-D points) crosses a polygon."""
+    """Returns a list of intersection points at which a polyline (a tuple,
+    list or array of points, each one a tuple, list or array of length
+    2) crosses a polygon.
+    """
     N = len(polyline)
     intersections = [
         line_polygon_intersections(polygon, [pt, polyline[(i+1) % N]])
@@ -144,8 +158,7 @@ def polyline_polygon_intersections(polygon, polyline):
 
 def simplify_polygon(polygon, tolerance = 1.e-6):
     """Simplifies a polygon by deleting colinear points.  The tolerance
-    for detecting colinearity of points can optionally be
-    specified.
+    for detecting colinearity of points can optionally be specified.
     """
     s = []
     poly = [np.array(v, dtype = float) for v in polygon]
@@ -160,7 +173,7 @@ def simplify_polygon(polygon, tolerance = 1.e-6):
 
 def polygon_boundary(this, other, polygon):
     """Returns point on a line between vector this and other and also on
-    the boundary of the polygon"""
+    the boundary of the polygon."""
     big = 1.e10
     poly = [np.array(v, dtype = float) for v in polygon]
     ref = poly[0]
@@ -185,8 +198,10 @@ def polygon_boundary(this, other, polygon):
     return v
 
 def line_projection(a, line, return_xi = False):
-    """Finds projection of point a onto a line (defined by two vectors).  Optionally
-    return the non-dimensional distance xi between the line start and end."""
+    """Finds projection of point *a* onto a *line* (defined by two points,
+    each a tuple, list or array of length 2).  Optionally returns the
+    non-dimensional distance xi between the line start and end.
+    """
     line = [np.array(p) for p in line]
     d = line[1] - line[0]
     try:
@@ -198,7 +213,7 @@ def line_projection(a, line, return_xi = False):
     else: return p
 
 def point_line_distance(a, line):
-    """Finds distance between point a and a line."""
+    """Finds the distance between point *a* and a line."""
     return np.linalg.norm(a - line_projection(a, line))
 
 def polyline_line_distance(polyline, line):
@@ -211,8 +226,9 @@ def polyline_line_distance(polyline, line):
     return min(dists)
 
 def vector_heading(p):
-    """Returns heading angle of a 2-D vector p, in radians clockwise from
-    the y-axis ('north')."""
+    """Returns heading angle of a point p (tuple, list or array of length
+    2), in radians clockwise from the y-axis ('north').
+    """
     from math import asin
     p = np.array(p)
     theta = asin(p[0] / np.linalg.norm(p))
@@ -222,7 +238,7 @@ def vector_heading(p):
     return theta
 
 def rotation(angle, centre = None):
-    """Returns 2-D matrix A and vector b representing a rotation of the
+    """Returns 2-by-2 matrix A and vector b representing a rotation of the
     specified angle (degrees clockwise) about the specified centre (or
     the origin if no centre is specified). The rotation of a point p
     is then given by Ap + b.

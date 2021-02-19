@@ -11,19 +11,26 @@ layermesh is distributed in the hope that it will be useful, but WITHOUT ANY WAR
 You should have received a copy of the GNU Lesser General Public License along with layermesh.  If not, see <http://www.gnu.org/licenses/>."""
 
 class quadtree(object):
-    """Quadtree for spatial searching of mesh columns.
-    Adapted from the quadtree data structure in PyTOUGH."""
+    """Quadtree for spatial searching of mesh columns. On creation, the
+    quadtree's bounding box, elements and optional parent quadtree are
+    specified.
+
+    Adapted from the quadtree data structure in PyTOUGH.
+
+    """
 
     def __init__(self, bounds, elements, parent = None):
 
         from layermesh.geometry import in_rectangle, sub_rectangles
 
-        self.parent = parent
-        self.bounds = bounds
-        self.elements = elements
-        self.child = []
+        self.parent = parent #: The quadtree's parent quadtree.
+        self.bounds = bounds #: The quadtree's bounding box.
+        self.elements = elements #: The elements in the quadtree.
+        self.child = [] #: A list of the quadtree's child quadtrees.
         if self.parent:
+            #: The generation index of the quadtree.
             self.generation = self.parent.generation + 1
+            #: The elements list of the zeroth-generation quadtree.
             self.all_elements = self.parent.all_elements
         else:
             self.generation = 0
@@ -41,14 +48,17 @@ class quadtree(object):
 
     def __repr__(self): return self.bounds.__repr__()
 
-    def get_num_elements(self): return len(self.elements)
-    num_elements = property(get_num_elements)
+    def _get_num_elements(self): return len(self.elements)
+    #: Number of elements in the quadtree.
+    num_elements = property(_get_num_elements)
 
-    def get_num_children(self): return len(self.child)
-    num_children = property(get_num_children)
+    def _get_num_children(self): return len(self.child)
+    #: Number of children of the quadtree.
+    num_children = property(_get_num_children)
 
     def search_wave(self, pos):
-        """Execute search wave for specified point on a quadtree leaf."""
+        """Executes search wave for specified point *pos* on a quadtree
+        leaf."""
 
         from layermesh.geometry import rectangles_intersect
         from copy import copy
@@ -66,13 +76,13 @@ class quadtree(object):
         return None
 
     def search(self, pos):
-        """Return element containing the specified point."""
+        """Returns the element containing the specified point *pos*."""
         leaf = self.leaf(pos)
         if leaf: return leaf.search_wave(pos)
         else: return None
 
     def leaf(self, pos):
-        """Return leaf containing the specified point."""
+        """Returns the leaf containing the specified point *pos*."""
         from layermesh.geometry import in_rectangle
         if in_rectangle(pos, self.bounds):
             for child in self.child:
@@ -82,7 +92,8 @@ class quadtree(object):
         else: return None
 
     def translate(self, shift):
-        """Translate quadtree horizontally by specified 2-D shift vector."""
+        """Translates the quadtree horizontally by the specified shift
+        vector (an array of length 2).
+        """
         self.bounds = [p + shift for p in self.bounds]
         for child in self.child: child.translate(shift)
-        
