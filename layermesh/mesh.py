@@ -952,7 +952,7 @@ class mesh(object):
                 if l is None: return None
                 else: return l.index if indices else l
             else:
-                raise Exception('Point to match has length > 3.')
+                raise Exception('Length of point to find is not between 1 and 3.')
         elif isinstance(match, (float, int)):
             l = self.find_layer(match)
             if l is None: return None
