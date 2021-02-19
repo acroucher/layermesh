@@ -423,20 +423,29 @@ class mesh(object):
         specified (the default) then all column surfaces will be set
         to the top of the uppermost layer.
 
-        By default, mesh cells are ordered first by layer and then by
-        column.
+        By default, mesh cells are ordered first by cell type (number
+        of nodes, in decreasing order), then layer and finally by
+        column within each layer, from the top to bottom of the
+        mesh. The sorting of cell types can be reversed or disabled by
+        setting the *cell_type_sort* parameter: a value of 1 sorts
+        cells in increasing type order, and a value of zero disables
+        cell type sorting.
 
     """
 
     def __init__(self, filename = None, **kwargs):
 
-        self.node = []
-        self.column = []
-        self.layer = []
-        self.cell = []
+        self.node = [] #: List of node objects in the mesh.
+        self.column = [] #: List of column objects in the mesh.
+        self.layer = [] #: List of layer objects in the mesh.
+        self.cell = [] #: List of cell objects in the mesh.
 
         if filename is not None: self.read(filename)
         else:
+            #: Integer controlling sorting of cells by type. A value of -1 (the default)
+            #: gives cells sorted by decreasing type (number of nodes). A value of 1
+            #: gives cells sorted by increasing type, while a value of zero disables
+            #: cell type sorting.
             self.cell_type_sort = kwargs.get('cell_type_sort',
                                              default_cell_type_sort)
             rectangular = kwargs.get('rectangular', None)
@@ -453,34 +462,32 @@ class mesh(object):
         return '%d columns, %d layers, %d cells' % \
             (self.num_columns, self.num_layers, self.num_cells)
 
-    def get_num_nodes(self):
-        """Returns number of 2-D nodes in mesh."""
+    def _get_num_nodes(self):
         return len(self.node)
-    num_nodes = property(get_num_nodes)
+    #: Number of 2-D nodes in the mesh.
+    num_nodes = property(_get_num_nodes)
 
-    def get_num_columns(self):
-        """Returns number of columns in mesh."""
+    def _get_num_columns(self):
         return len(self.column)
-    num_columns = property(get_num_columns)
+    #: Number of columns in the mesh.
+    num_columns = property(_get_num_columns)
 
-    def get_num_layers(self):
-        """Returns number of layers in mesh."""
+    def _get_num_layers(self):
         return len(self.layer)
-    num_layers = property(get_num_layers)
+    #: Number of layers in the mesh.
+    num_layers = property(_get_num_layers)
 
-    def get_area(self):
-        """Returns horizontal area of mesh. """
+    def _get_area(self):
         return sum([col.area for col in self.column])
-    area = property(get_area)
+    #: Horizontal area of the mesh.
+    area = property(_get_area)
 
-    def get_volume(self):
-        """Returns total volume of mesh."""
+    def _get_volume(self):
         return sum([col.volume for col in self.column])
-    volume = property(get_volume)
+    #: Total volume of the mesh.
+    volume = property(_get_volume)
 
-    def get_centre(self):
-        """Returns horizontal centre of mesh, approximated by an area-weighted
-        average of column centres."""
+    def _get_centre(self):
         if self.num_columns > 0:
             c = np.zeros(2)
             a = 0.
@@ -489,16 +496,17 @@ class mesh(object):
                 a += col.area
             return c / a
         else: return None
-    centre = property(get_centre)
+    #: Horizontal centre of the mesh (an array of length 2),
+    #: approximated by an area-weighted average of column centres.
+    centre = property(_get_centre)
 
-    def get_bounds(self):
-        """Returns horizontal bounding box for mesh."""
+    def _get_bounds(self):
         from layermesh.geometry import bounds_of_points
         return bounds_of_points([node.pos for node in self.node])
-    bounds = property(get_bounds)
+    #: Horizontal bounding box for the mesh.
+    bounds = property(_get_bounds)
 
-    def get_boundary_nodes(self):
-        """Returns set of nodes on the boundary of the mesh."""
+    def _get_boundary_nodes(self):
         bdy = set()
         for col in self.column:
             num_nodes = col.num_nodes
@@ -508,24 +516,25 @@ class mesh(object):
                     for index in [i, i1]:
                         bdy.add(col.node[index])
         return bdy
-    boundary_nodes = property(get_boundary_nodes)
+    #: Set of nodes on the boundary of the mesh.
+    boundary_nodes = property(_get_boundary_nodes)
 
     def add_node(self, n):
-        """Adds horizontal node to mesh."""
+        """Adds a horizontal node to the mesh."""
         self.node.append(n)
 
     def add_layer(self, lay):
-        """Adds layer to mesh."""
+        """Adds a layer to the mesh."""
         self.layer.append(lay)
 
     def add_column(self, col):
-        """Adds column to mesh."""
+        """Adds a column to the mesh."""
         self.column.append(col)
         for n in col.node:
             n.column.add(col)
 
     def delete_column(self, col):
-        """Deletes specified column from the mesh."""
+        """Deletes the specified column object from the mesh."""
         for nbr in col.neighbour:
             nbr.neighbour.remove(col)
         for n in col.node:
@@ -542,7 +551,7 @@ class mesh(object):
                         col.neighbour.add(nbr)
 
     def set_layer_columns(self, lay):
-        """Populates list of columns for given layer."""
+        """Populates the list of columns for a given layer."""
         lay.column = [col for col in self.column
                       if self.column_in_layer(col, lay)]
 
@@ -619,13 +628,13 @@ class mesh(object):
                 col.cell.append(c)
                 index += 1
 
-    def get_num_cells(self):
-        """Returns number of 3-D cells in mesh."""
+    def _get_num_cells(self):
         return len(self.cell)
-    num_cells = property(get_num_cells)
+    #: Number of 3-D cells in the mesh.
+    num_cells = property(_get_num_cells)
 
     def set_rectangular_columns(self, spacings):
-        """Sets rectangular mesh columns according to specified horizontal
+        """Sets rectangular mesh columns according to specified lists of horizontal
         mesh spacings."""
 
         self.node = []
@@ -668,8 +677,8 @@ class mesh(object):
             index += 1
 
     def column_in_layer(self, col, lay):
-        """Returns true if column is in the specified layer, or
-        false otherwise."""
+        """Returns *True* if column is in the specified layer, or
+        *False* otherwise."""
         return col.num_layers >= self.num_layers - lay.index
 
     def set_surface(self, surface):
@@ -694,11 +703,10 @@ class mesh(object):
             raise Exception('Unrecognized surface parameter type.')
         self.setup()
 
-    def get_surface(self):
-        """Returns array of column surface elevations."""
+    def _get_surface(self):
         return np.array([col.surface for col in self.column])
-
-    surface = property(get_surface, set_surface)
+    #: Array of column surface elevations.
+    surface = property(_get_surface, set_surface)
 
     def set_column_layers(self, num_layers):
         """Sets column layers from dictionary (keyed by column indices) or
@@ -781,9 +789,7 @@ class mesh(object):
                                 num_layers = np.array(col_group['num_layers'])
         self.set_column_layers(num_layers)
 
-    def get_meshio_points_cells(self):
-        """Returns lists of 3-D points and cells suitable for mesh
-        input/output using meshio library."""
+    def _get_meshio_points_cells(self):
 
         points = []
         cells = {'wedge': [], 'hexahedron': []}
@@ -809,7 +815,9 @@ class mesh(object):
         cells = dict([(k, np.array(v)) for k, v in cells.items() if v])
         return points, cells
 
-    meshio_points_cells = property(get_meshio_points_cells)
+    #: Lists of 3-D points and cells suitable for mesh
+    #: input/output using meshio library.
+    meshio_points_cells = property(_get_meshio_points_cells)
 
     def export(self, filename, fmt = None):
         """Exports 3-D mesh using meshio, to file with the specified name. If
@@ -819,16 +827,15 @@ class mesh(object):
         points, cells = self.meshio_points_cells
         meshio.write_points_cells(filename, points, cells, file_format = fmt)
 
-    def get_surface_cells(self):
-        """Returns cells at mesh surface."""
+    def _get_surface_cells(self):
         return [col.cell[0] for col in self.column]
-    surface_cells = property(get_surface_cells)
+    #: List of cells at the surface of the mesh."""
+    surface_cells = property(_get_surface_cells)
 
     def column_faces(self, columns = None):
         """Returns a list of the column faces between the specified columns. A
         list of the columns may be optionally specified, otherwise all
         columns will be included.
-
         """
         if columns is None: columns = self.column
         col_dict = {col.index: col for col in columns}
@@ -845,21 +852,22 @@ class mesh(object):
         return faces
 
     def nodes_in_columns(self, columns):
-        """Returns set of nodes in the specified columns."""
+        """Returns a set of nodes in the specified columns."""
         nodes = set()
         for col in columns:
             nodes = nodes | set(col.node)
         return nodes
 
     def translate(self, shift):
-        """Translates mesh by specified 3-D shift vector."""
-        if isinstance(shift, (list, tuple)): shift = np.array(shift)
+        """Translates the mesh by the specified 3-D shift vector (tuple, list
+        or array of length 3)."""
+        shift = np.array(shift)
         for node in self.node: node.pos += shift[:2]
         for col in self.column: col.translate(shift[:2])
         for layer in self.layer: layer.translate(shift)
 
     def rotate(self, angle, centre = None):
-        """Rotates mesh horizontally by the specified angle (degrees
+        """Rotates the mesh horizontally by the specified angle (degrees
         clockwise). If no centre is specified, the mesh is rotated
         about its own centre."""
         from layermesh.geometry import rotation
@@ -877,7 +885,7 @@ class mesh(object):
                 lay.setup_quadtree()
 
     def find_layer(self, z):
-        """Returns layer containing elevation z, or None if the point is
+        """Returns layer containing the elevation z, or *None* if the point is
         outside the mesh."""
         if self.num_layers == 0:
             return None
@@ -893,8 +901,9 @@ class mesh(object):
                 return None
 
     def find_column(self, pos):
-        """Returns column containing point pos (list, tuple or array of
-        length 2), or None if pos is outside the mesh."""
+        """Returns the column containing the point pos (list, tuple or array
+        of length 2), or *None* if pos is outside the mesh.
+        """
         if self.num_layers == 0:
             return None
         else:
@@ -902,9 +911,9 @@ class mesh(object):
             return c if c is None else c.column
 
     def find_cell(self, pos):
-        """Returns cell containing point pos (list, tuple or array of
-        length 3), or None if pos is outside the mesh."""
-
+        """Returns the cell containing the point pos (list, tuple or array of
+        length 3), or *None* if pos is outside the mesh.
+        """
         lay = self.find_layer(pos[2])
         if lay is None:
             return None
@@ -913,13 +922,18 @@ class mesh(object):
 
     def find(self, match, indices = False):
         """Returns cell or cells matching the specified matching
-        criterion. The match parameter can be a function taking a cell
+        criterion.
+
+        The match parameter can be a function taking a cell
         and returning a Boolean, in which case a list of matching
-        cells is returned. Alternatively it can be a 3-D point (tuple,
+        cells is returned.
+
+        Alternatively it can be a 3-D point (tuple,
         list or array), in which case the cell containing the
         point is returned, or a 2-D point, in which case the column
         containing the point is returned, or a 1-D point or scalar,
         in which case the layer containing the elevation is returned.
+
         If indices is *True*, the cell (or column or layer) indices are
         returned rather than the cells, columns or layers themselves.
         """
@@ -960,8 +974,11 @@ class mesh(object):
 
     def cells_inside(self, polygon, elevations = None, sort = True, indices = False):
         """Returns a list of cells in the mesh with columns inside the
-        specified polygon. Specifying the elevations parameter as a two-element
+        specified polygon.
+
+        Specifying the elevations parameter as a two-element
         list, tuple or array means only cells inside that elevation range are returned.
+
         If sort is *True*, the returned cells are sorted by cell index. If indices is
         *True*, cell indices are returned instead of cells."""
 
@@ -986,8 +1003,9 @@ class mesh(object):
     def column_track(self, line):
         """Returns a list of tuples of (column, entry_point, exit_point)
         representing the horizontal track traversed by the specified
-        line through the grid.  Line is a tuple of two 2D arrays.  The
-        resulting list is ordered by distance from the start of the
+        line through the grid.  Line is a tuple of two 2D arrays.
+
+        The resulting list is ordered by distance from the start of the
         line. Adapted from the PyTOUGH mulgrid column_track()
         method."""
 
@@ -1112,7 +1130,31 @@ class mesh(object):
         else: return []
 
     def layer_plot(self, lay = -1, **kwargs):
-        """Creates a 2-D Matplotlib plot of the mesh at a specified layer."""
+        """Creates a 2-D Matplotlib plot of the mesh at a specified layer. The
+        *lay* parameter can be either a layer object or a layer index.
+
+        Other optional parameters:
+
+        * *aspect*: the aspect ratio of the axes (default *'equal'*).
+        * *axes*: a Matplotlib axes object on which to draw the plot. If not
+          specified, then a new axes object will be created internally.
+        * *colourmap*: a Matplotlib colourmap object for shading the plot
+          according to the *value* array (default *None*).
+        * *elevation*: used to specify an elevation instead of a layer.
+        * *label*: a string (or *None*, the default) specifying what labels\
+          are to be drawn at the centre of each column. Possible values are
+          *'column'* (to label with column indices), *'cell'* (to label cell
+          indices) or *'value'* (to label with the *value* array).
+        * *label_format*: format string for the labels (default *'%g'*).
+        * *label_colour*: the colour of the labels (default *'black'*).
+        * *linecolour*: the colour of the mesh grid (default *'black'*).
+        * *linewidth*: the line width of the mesh (default *0.2*).
+        * *value*: a tuple, list or array of values to plot over the mesh,
+          of length equal to the number of cells in the mesh.
+        * *xlabel*: label string for the plot *x*-axis (default *'x'*).
+        * *ylabel*: label string for the plot *y*-axis (default *'y'*).
+
+        """
 
         import matplotlib.pyplot as plt
         import matplotlib.collections as collections
@@ -1171,7 +1213,7 @@ class mesh(object):
                 indices = [c.index for c in lay.cell]
                 layer_vals = vals[indices]
                 polys.set_array(layer_vals)
-                self.plot_colourbar(ax, polys, kwargs)
+                self._plot_colourbar(ax, polys, kwargs)
                 if labels == 'value':
                     for c in lay.cell:
                         col = c.column
@@ -1190,7 +1232,7 @@ class mesh(object):
 
         if 'axes' not in kwargs: plt.show()
 
-    def plot_colourbar(self, ax, polys, kwargs):
+    def _plot_colourbar(self, ax, polys, kwargs):
         """Adds colour bar to Matplotlib plot on specified axes."""
 
         import matplotlib.pyplot as plt
@@ -1205,7 +1247,36 @@ class mesh(object):
 
     def slice_plot(self, line = 'x', **kwargs):
         """Creates a 2-D Matplotlib plot of the mesh through a specified
-        vertical slice."""
+        vertical slice. The horizontal line defining the slice can be either:
+
+        * *'x'*: to plot through the mesh centre along the *x*-axis
+        * *'y'*: to plot through the mesh centre along the *y*-axis
+        * a number representing an angle (in degrees), clockwise from the *y*-axis,
+          to plot through the centre of the mesh at that angle
+        * a tuple, list or array of two end-points for the line, each point being
+          itself a tuple, list or array of length 2
+
+        Other optional parameters:
+
+        * *aspect*: the aspect ratio of the axes (default *'auto'*).
+        * *axes*: a Matplotlib axes object on which to draw the plot. If not
+          specified, then a new axes object will be created internally.
+        * *colourmap*: a Matplotlib colourmap object for shading the plot
+          according to the *value* array (default *None*).
+        * *label*: a string (or *None*, the default) specifying what labels\
+          are to be drawn at the centre of each cell. Possible values are
+          *'cell'* (to label cell indices) or *'value'* (to label with the
+          *value* array).
+        * *label_format*: format string for the labels (default *'%g'*).
+        * *label_colour*: the colour of the labels (default *'black'*).
+        * *linecolour*: the colour of the mesh grid (default *'black'*).
+        * *linewidth*: the line width of the mesh (default *0.2*).
+        * *value*: a tuple, list or array of values to plot over the mesh,
+          of length equal to the number of cells in the mesh.
+        * *xlabel*: label string for the plot *x*-axis (default *'x'*).
+        * *ylabel*: label string for the plot *y*-axis (default *'z'*).
+
+        """
 
         import matplotlib.pyplot as plt
         import matplotlib.collections as collections
@@ -1289,7 +1360,7 @@ class mesh(object):
                     indices = [c.index for c in slice_cells]
                     slice_vals = vals[indices]
                     polys.set_array(slice_vals)
-                    self.plot_colourbar(ax, polys, kwargs)
+                    self._plot_colourbar(ax, polys, kwargs)
                     if labels == 'value':
                         for c in slice_cells:
                             col = c.column
@@ -1316,10 +1387,9 @@ class mesh(object):
         piecewise constant least-squares fitting.
 
         The data should be in the form of a 3-column array with x,y,z
-        data in each row.
-
-        Fitting can be carried out over a subset of the mesh columns
-        by specifying a list or array of column indices.
+        data in each row. Fitting can be carried out over a subset of
+        the mesh columns by specifying a list or array of column
+        indices.
 
         Increasing the smoothing parameter will decrease gradients
         between columns, and a non-zero value must be used to obtain a
@@ -1360,15 +1430,16 @@ class mesh(object):
         """Fits surface elevation data to determine the number of layers in
         each column.
 
-        The data should be in the form of a 3-column array with x,y,z
-        data in each row.
-
-        Fitting can be carried out over a subset of the mesh columns
-        by specifying a list or array of columns.
+        The *data* should be in the form of a 3-column array with
+        x,y,z data in each row. Fitting can be carried out over a
+        subset of the mesh columns by specifying a list or array of
+        columns.
 
         Increasing the smoothing parameter will decrease gradients
         between columns, and a non-zero value must be used to obtain a
-        solution if any columns contain no data."""
+        solution if any columns contain no data.
+
+        """
 
         if columns is None: columns = self.column
 
@@ -1514,6 +1585,17 @@ class mesh(object):
         mesh. If no nodes are specified, all node positions are
         optimized. If columns are specified, the positions of nodes in
         those columns are optimized.
+
+        Three types of optimization are offered, with their relative
+        importance in the optimization specified via the *weight*
+        dictionary parameter. This can contain up to three keys:
+
+        * 'orthogonal': the orthogonality of the mesh faces
+        * 'skewness': the skewness of the columns
+        * 'aspect': the aspect ratio of the columns
+
+        Omitting any of these keys from the *weight* parameter will
+        give them zero weight.
         """
 
         from scipy.optimize import leastsq
