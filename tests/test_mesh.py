@@ -169,6 +169,29 @@ class meshTestCase(unittest.TestCase):
         points, cells = m.meshio_points_cells
         self.assertEqual(len(cells['hexahedron']), 21)
 
+    def test_contains(self):
+
+        # TODO add null mesh tests
+
+        dx = [10, 20, 30]; dy = [20, 15, 10]
+        dz = [5, 10, 15]
+        surface = [0.2, -9, -18] * 3
+        m = mesh.mesh(rectangular = (dx, dy, dz), surface = surface)
+
+        col = m.column[0]
+
+        self.assertTrue(col.contains(-10))
+        self.assertTrue(col.contains(-0.1))
+        self.assertFalse(col.contains(0.5))
+        self.assertFalse(col.contains(-31))
+
+        self.assertTrue(col.contains((7, 1)))
+        self.assertFalse(col.contains([11, 5]))
+        self.assertFalse(col.contains(np.array([-1, 5])))
+
+        self.assertTrue(col.contains((7, 1, -15)))
+        self.assertFalse(col.contains((7, 1, 15)))
+
     def test_find(self):
 
         m = mesh.mesh()
