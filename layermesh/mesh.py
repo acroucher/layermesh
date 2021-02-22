@@ -317,10 +317,36 @@ class layer(object):
         if self.quadtree is not None:
             self.quadtree.translate(shift[:2])
 
-    def contains(self, z):
-        """Returns *True* if layer contains specified elevation *z*, or *False*
-        otherwise."""
+    def contains_vertical(self, z):
+        """Returns *True* if the layer contains the specified elevation *z*,
+        or *False* otherwise."""
         return self.bottom <= z <= self.top
+
+    def contains_horizontal(self, pos):
+        """Returns *True* if the layer contains the specified 2-D point pos
+        (tuple, list or array of length 2)."""
+
+        if self.quadtree is None: self.setup_quadtree()
+        col = self.quadtree.search(pos)
+        return col is not None
+
+    def contains_point(self, pos):
+        """Returns *True* if the layer contains the specified 3-D point pos
+        (tuple, list or array of length 3)."""
+        if self.contains_vertical(pos[2]):
+            return self.contains_horizontal(pos[:2])
+        else: return False
+
+    def contains(self, pos):
+        """Returns *True* if the layer contains the specified elevation,
+        2-D or 3-D point."""
+        if isinstance(pos, (int, float)):
+            return self.contains_vertical(pos)
+        else:
+            l = len(pos)
+            if l == 2: return self.contains_horizontal(pos)
+            elif l == 3: return self.contains_point(pos)
+        raise Exception('Unrecognized input to contains().')
 
     def cell_containing(self, pos):
         """Returns cell in layer with column containing the 2-D point *pos* (a
