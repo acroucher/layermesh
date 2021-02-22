@@ -171,7 +171,10 @@ class meshTestCase(unittest.TestCase):
 
     def test_contains(self):
 
-        # TODO add null mesh tests
+        m = mesh.mesh()
+        self.assertFalse(m.contains(1))
+        self.assertFalse(m.contains([3, 4]))
+        self.assertFalse(m.contains(np.array([3, 4, 5])))
 
         dx = [10, 20, 30]; dy = [20, 15, 10]
         dz = [5, 10, 15]
@@ -205,6 +208,18 @@ class meshTestCase(unittest.TestCase):
 
         self.assertTrue(lay.contains((7, 23.1, -14)))
         self.assertFalse(lay.contains([31.3, 23.1, -14]))
+
+        self.assertTrue(m.contains(-12))
+        self.assertTrue(m.contains(-0.1))
+        self.assertFalse(m.contains(-35.4))
+
+        self.assertTrue(m.contains((12.0, 1)))
+        self.assertFalse(m.contains((-12.0, 12.0)))
+        self.assertFalse(m.contains([15, 50]))
+
+        self.assertTrue(m.contains((7, 37, -4)))
+        self.assertFalse(m.contains([7, 1, 15]))
+        self.assertFalse(m.contains([30, -1.1, -20]))
 
     def test_find(self):
 

@@ -932,6 +932,41 @@ class mesh(object):
             if lay.quadtree is not None:
                 lay.setup_quadtree()
 
+    def contains_vertical(self, z):
+        """Returns *True* if the mesh has a layer containing the specified
+        elevation *z*, or *False* otherwise."""
+        if self.num_layers == 0:
+            return False
+        else:
+            return self.layer[-1].bottom <= z <= self.layer[0].top
+
+    def contains_horizontal(self, pos):
+        """Returns *True* if the mesh contains the specified 2-D point pos
+        (tuple, list or array of length 2)."""
+        if self.num_layers == 0:
+            return False
+        else:
+            return self.layer[-1].contains(pos)
+
+    def contains_point(self, pos):
+        """Returns *True* if the mesh contains the 3-D point pos (tuple, list or
+        array of length 3)."""
+        if self.contains_vertical(pos[2]):
+            lay = self.find_layer(pos[2])
+            return lay.contains(pos[:2])
+        else: return False
+
+    def contains(self, pos):
+        """Returns *True* if the mesh contains the specified elevation,
+        2-D or 3-D point."""
+        if isinstance(pos, (int, float)):
+            return self.contains_vertical(pos)
+        else:
+            l = len(pos)
+            if l == 2: return self.contains_horizontal(pos)
+            elif l == 3: return self.contains_point(pos)
+        raise Exception('Unrecognized input to contains().')
+
     def find_layer(self, z):
         """Returns layer containing the elevation z, or *None* if the point is
         outside the mesh."""
