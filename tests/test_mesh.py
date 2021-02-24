@@ -236,7 +236,7 @@ class meshTestCase(unittest.TestCase):
 
         c = m.find(np.array([40, 50, -20]))
         self.assertIsNone(c)
-        
+
         # mesh polygon:
         cols = m.find(poly, indices = True, sort = True)
         self.assertEqual(cols, [1, 4])
@@ -266,7 +266,7 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(cols, [])
         cols = m.layer[1].find(poly, indices = True, sort = True)
         self.assertEqual(cols, [1, 4])
-        
+
         # layer 3-D point:
         p = [17, 40, -13]
         c = m.layer[1].find(p)
@@ -281,7 +281,7 @@ class meshTestCase(unittest.TestCase):
         col = m.column[3]
         cells = col.find(lambda c: c.centre[2] < -6, sort = True, indices = True)
         self.assertEqual(cells, [5, 12])
-        
+
         cells = col.find(lambda c: c.volume < 1000 , sort = True, indices = True)
         self.assertEqual(cells, [1])
 
@@ -339,7 +339,7 @@ class meshTestCase(unittest.TestCase):
         # node:
         self.assertIsNone(m.node[2].find(poly))
         self.assertIsNotNone(m.node[5].find(poly))
-        
+
         # transform mesh to test quadtree:
         m.translate((100, 0, 10))
         c = m.find([105, 8], indices = True)
@@ -535,5 +535,4 @@ if __name__ == '__main__':
 
     suite = unittest.TestLoader().loadTestsFromTestCase(meshTestCase)
     unittest.TextTestRunner(verbosity = 1).run(suite)
-
 
