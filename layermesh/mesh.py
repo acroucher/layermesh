@@ -27,7 +27,34 @@ class node(object):
     def __repr__(self):
         return str(list(self.pos))
 
-class column(object):
+    def find(self, polygon, indices = False):
+        """Returns self if the node is inside the specified *polygon* (tuple,
+        list or array of 2-D points, each one a tuple, list or array
+        of length 2), otherwise *None*."""
+        from layermesh.geometry import in_polygon
+        return self if in_polygon(self.pos, polygon) else None
+
+class _layered_object(object):
+    """Object with a list of layers, used as the base class for column and
+    mesh."""
+
+    def _find_layer(self, z):
+        """Returns layer containing the elevation z, or *None* if the point is
+        outside the mesh."""
+        if self.num_layers == 0:
+            return None
+        else: # use bisection to find layer:
+            if self.layer[-1].bottom <= z <= self.layer[0].top:
+                i0, i1 = 0, self.num_layers - 1
+                while i1 > i0:
+                    im = (i0 + i1) // 2
+                    if z >= self.layer[im].bottom: i1 = im
+                    else: i0 = im + 1
+                return self.layer[i1]
+            else:
+                return None
+
+class column(_layered_object):
     """Mesh column. On creation, the column's nodes (and optionally index)
     are specified."""
 
@@ -156,44 +183,92 @@ class column(object):
     #: to set the layers in the column.)
     surface = property(_get_surface)
 
-    def contains_vertical(self, z):
-        """Returns *True* is the column contains the specified elevation."""
-        return self.layer[-1].bottom <= z <= self.layer[0].top
-
-    def contains_horizontal(self, pos):
-        """Returns *True* if the column contains the 2-D point pos (tuple, list or
-        array of length 2)."""
+    def _find_column(self, pos):
+        """Returns self if the column contains the 2-D point pos (tuple, list or
+        array of length 2), otherwise *None*."""
         from layermesh.geometry import in_polygon
-        return in_polygon(np.array(pos), self.polygon)
+        return self if in_polygon(np.array(pos), self.polygon) else None
 
-    def contains_point(self, pos):
-        """Returns *True* if the column contains the 3-D point pos (tuple, list or
-        array of length 3)."""
-        if self.contains_vertical(pos[2]):
-            return self.contains_horizontal(pos[:2])
-        else: return False
-
-    def contains(self, pos):
-        """Returns *True* if the column contains the specified elevation,
-        2-D or 3-D point."""
-        if isinstance(pos, (int, float)):
-            return self.contains_vertical(pos)
-        else:
-            l = len(pos)
-            if l == 2: return self.contains_horizontal(pos)
-            elif l == 3: return self.contains_point(pos)
-        raise Exception('Unrecognized input to contains().')
-
-    def inside(self, polygon):
-        """Returns true if the centre of the column is inside the specified
-        polygon (a list of horizontal positions, specified as tuples,
-        lists or arrays of length 2).
+    def _find_columns(self, polygon):
+        """Returns self if the column centroid is inside the
+        polygon (a tuple, list or array of 2-D points, each a tuple,
+        list or array of length 2).
         """
-        from layermesh.geometry import in_rectangle, in_polygon
-        if len(polygon) == 2:
-            return in_rectangle(self.centre, polygon)
+        from layermesh.geometry import in_polygon
+        return self if in_polygon(self.centroid, polygon) else None
+
+    def _find_cell(self, pos):
+        """Returns cell in the column containing the 3-D point pos (tuple, list or
+        array of length 3), otherwise *None*."""
+        lay = self._find_layer(pos[2])
+        if lay:
+            col = self._find_column(pos[:2])
+            if col: return lay.column_cell[col.index]
+            else: return None
+        else: return None
+
+    def find(self, match, indices = False, sort = False):
+        """Returns cells, columns or layers satisfying the criterion *match*.
+
+        The *match* parameter can be:
+
+        * a **function** taking a cell and returning a Boolean: a list
+          of matching cells is returned
+        * a **scalar**: *match* is interpreted as an **elevation**,
+          and the layer containing it is returned
+        * a **2-D point** (tuple, list or array of length 2): *match*
+          is interpreted as a **horizontal position**, and self is returned
+          if it contains the point
+        * a **polygon** (tuple, list or array of 2-D points): self is
+          returned if its centroid is inside the polygon
+        * a **3-D point** (tuple, list or array of length 3): *match*
+          is interpreted as a **3-D position**, and the cell
+          containing it is returned
+
+        If indices is *True*, the cell, column or layer indices
+        are returned rather than the cells, columns or layers
+        themselves.
+
+        If *sort* is *True*, then lists of results are sorted by index.
+
+        If no match is found, then *None* is returned, except when the
+        expected result is a list, in which case an empty list is
+        returned.
+        """
+
+        if callable(match):
+            result = [c for c in self.cell if match(c)]
+        elif isinstance(match, (float, int)):
+            result = self._find_layer(match)
+        elif isinstance(match, (tuple, list, np.ndarray)):
+            pos = np.array(match)
+            if pos.ndim == 1:
+                if len(pos) == 1:
+                    result = self._find_layer(pos[0])
+                elif len(pos) == 2:
+                    result = self._find_column(pos)
+                elif len(pos) == 3:
+                    result = self._find_cell(pos)
+                else:
+                    raise Exception('Length of point to find is not between 1 and 3.')
+            elif pos.ndim == 2:
+                if pos.shape[1] == 2:
+                    result = self._find_columns(pos)
+                else:
+                    raise Exception('Unrecognised match shape.')
+            else:
+                raise Exception('Unrecognised match shape.')
         else:
-            return in_polygon(self.centre, polygon)
+            raise Exception('Unrecognised match type.')
+
+        if result is None: return None
+        elif isinstance(result, list):
+            if sort:
+                isort = np.argsort(np.array([r.index for r in result]))
+                result = [result[i] for i in isort]
+            return [r.index for r in result] if indices else result
+        else:
+            return result.index if indices else result
 
     def translate(self, shift):
         """Translates column horizontally by the specified shift array (a
@@ -318,107 +393,96 @@ class layer(object):
         self.top += shift[2]
         if self._centre is not None:
             self._centre += shift[2]
-
-    def contains_vertical(self, z):
-        """Returns *True* if the layer contains the specified elevation *z*,
-        or *False* otherwise."""
-        return self.bottom <= z <= self.top
-
-    def contains_horizontal(self, pos):
-        """Returns *True* if the layer contains the specified 2-D point pos
-        (tuple, list or array of length 2)."""
-
-        if self.quadtree is None: self.setup_quadtree()
-        col = self.quadtree.search(pos)
-        return col is not None
-
-    def contains_point(self, pos):
-        """Returns *True* if the layer contains the specified 3-D point pos
-        (tuple, list or array of length 3)."""
-        if self.contains_vertical(pos[2]):
-            return self.contains_horizontal(pos[:2])
-        else: return False
-
-    def contains(self, pos):
-        """Returns *True* if the layer contains the specified elevation,
-        2-D or 3-D point."""
-        if isinstance(pos, (int, float)):
-            return self.contains_vertical(pos)
-        else:
-            l = len(pos)
-            if l == 2: return self.contains_horizontal(pos)
-            elif l == 3: return self.contains_point(pos)
-        raise Exception('Unrecognized input to contains().')
-
-    def cell_containing(self, pos):
-        """Returns cell in layer with column containing the 2-D point *pos* (a
-        tuple, list or array of length 2). If no column in the
-        layer contains this point then *None* is returned.
         if self._quadtree is not None:
             self._quadtree.translate(shift[:2])
-        """
 
-        if self.quadtree is None: self.setup_quadtree()
-        col = self.quadtree.search(pos)
-        if col:
-            return self.column_cell[col.index]
+    def _find_layer(self, z):
+        """Returns self if the layer contains the specified elevation *z*,
+        or None otherwise."""
+        return self if self.bottom <= z <= self.top else None
+
+    def _find_column(self, pos):
+        """Returns the column in the layer containing the specified 2-D point
+        pos (tuple, list or array of length 2), or *None*."""
+        return self.quadtree.search(pos)
+
+    def _find_columns(self, polygon):
+        """Returns a list of columns in the layer with centroids inside the
+        polygon (a tuple, list or array of 2-D points, each a tuple,
+        list or array of length 2).
+        """
+        return [col for col in self.column if col._find_columns(polygon)]
+
+    def _find_cell(self, pos):
+        """Returns the cell in the layer containing the specified 3-D point
+        pos (tuple, list or array of length 3), or *None*."""
+        if self._find_layer(pos[2]):
+            col = self._find_column(pos[:2])
+            if col: return self.column_cell[col.index]
+            else: return None
         else: return None
 
-    def columns_inside(self, polygon):
-        """Returns a list of columns in the layer which are inside the
-        specified polygon (a list or tuple of points, each defined by
-        a tuple, list or array of length 2).
-        """
-        return [col for col in self.column if col.inside(polygon)]
+    def find(self, match, indices = False, sort = False):
+        """Returns cells, columns or layer satifying the criterion *match*.
 
-    def cells_inside(self, polygon):
-        """Returns a list of cells in the layer with columns inside the
-        specified polygon (a list or tuple of points, each defined by
-        a tuple, list or array of length 2)."""
-        return [c for c in self.cell if c.column.inside(polygon)]
+        The *match* parameter can be:
 
-    def find(self, match, indices = False):
-        """Returns cell or cells in the layer satifying the specified matching
-        criterion.
+        * a **function** taking a cell and returning a Boolean: a list
+          of matching cells is returned
+        * a **scalar**: *match* is interpreted as an **elevation**,
+          and the layer is returned if the elevation is inside it
+        * a **2-D point** (tuple, list or array of length 2): *match*
+          is interpreted as a **horizontal position**, and the column
+          containing it is returned
+        * a **polygon** (tuple, list or array of 2-D points): a list of
+          columns inside the polygon are returned
+        * a **3-D point** (tuple, list or array of length 3): *match*
+          is interpreted as a **3-D position**, and the cell
+          containing it is returned
 
-        The match parameter can be a function taking a cell
-        and returning a Boolean, in which case a list of matching
-        cells is returned.
+        If indices is *True*, the cell, column or layer indices are
+        returned rather than the cells, columns or layer themselves.
 
-        Alternatively it can be a 2-D point (tuple, list or array), in
-        which case the cell with column containing the point is
-        returned, or a polygon (a tuple or list of points, each
-        defined as a tuple, list or array of length 2), in which case
-        a list of cells with columns inside the polygon is returned.
+        If *sort* is *True*, then lists of results are sorted by index.
 
-        If indices is *True*, the cell indices are returned
-        rather than the cells themselves.
-
+        If no match is found, then *None* is returned, except when the
+        expected result is a list, in which case an empty list is
+        returned.
         """
 
-        if isinstance(match, (tuple, list)) and \
-           all([isinstance(item, (float, int)) for item in match]) or \
-           isinstance(match, np.ndarray):
-            if len(match) == 2:
-                c = self.cell_containing(match)
-                if c is None: return None
-                else: return c.index if indices else c
+        if callable(match):
+            result = [c for c in self.cell if match(c)]
+        elif isinstance(match, (float, int)):
+            result = self._find_layer(match)
+        elif isinstance(match, (tuple, list, np.ndarray)):
+            pos = np.array(match)
+            if pos.ndim == 1:
+                if len(pos) == 1:
+                    result = self._find_layer(pos[0])
+                elif len(pos) == 2:
+                    result = self._find_column(pos)
+                elif len(pos) == 3:
+                    result = self._find_cell(pos)
+                else:
+                    raise Exception('Length of point to find is not between 1 and 3.')
+            elif pos.ndim == 2:
+                if pos.shape[1] == 2:
+                    result = self._find_columns(pos)
+                else:
+                    raise Exception('Unrecognised match shape.')
             else:
-                raise Exception('Point to match is not of length 2.')
-        elif isinstance(match, (list, tuple)) and \
-             all([isinstance(item, (tuple, list, np.ndarray)) and \
-                             len(item) == 2 for item in match]):
-            cells = self.cells_inside(match)
-            if cells:
-                return [c.index for c in cells] if indices else cells
-            else: return []
-        elif callable(match):
-            cells = [c for c in self.cell if match(c)]
-            if cells:
-                return [c.index for c in cells] if indices else cells
-            else: return []
+                raise Exception('Unrecognised match shape.')
         else:
             raise Exception('Unrecognised match type.')
+
+        if result is None: return None
+        elif isinstance(result, list):
+            if sort:
+                isort = np.argsort(np.array([r.index for r in result]))
+                result = [result[i] for i in isort]
+            return [r.index for r in result] if indices else result
+        else:
+            return result.index if indices else result
 
 class cell(object):
     """Mesh cell. On creation, the layer and column defining the cell (and
@@ -452,10 +516,85 @@ class cell(object):
 
     def _get_num_nodes(self):
         return 2 * self.column.num_nodes
-    #: Number of nodes in the cell.
+    #: Number of nodes in the cell (at both top and bottom of layer).
     num_nodes = property(_get_num_nodes)
 
-class mesh(object):
+    def _find_layer(self, z):
+        """Returns cell layer if it contains the specified elevation *z*, or
+        *None* otherwise."""
+        return self.layer._find_layer(z)
+
+    def _find_column(self, pos):
+        """Returns cell column if it contains the 2-D point pos (tuple, list
+        or array of length 2), otherwise *None*."""
+        return self.column._find_column(pos)
+
+    def _find_columns(self, polygon):
+        """Returns cell column if its centroid is inside the polygon (a tuple,
+        list or array of 2-D points, each a tuple, list or array of
+        length 2)."""
+        return self.column._find_columns(polygon)
+
+    def _find_cell(self, pos):
+        """Returns self if the 3-D point (tuple, list or array of length 3)
+        *pos* is inside the cell, otherwise *None*."""
+        if self.layer._find_layer(pos[2]):
+            if self.column._find_column(pos[:2]): return self
+            else: return None
+        else: return None
+
+    def find(self, match, indices = False):
+        """Returns cell, column or layer satisfying the criterion *match*.
+
+        The *match* parameter can be:
+
+        * a **function** taking a cell and returning a Boolean: the cell is
+          returned if it matches, otherwise *None*
+        * a **scalar**: *match* is interpreted as an **elevation**
+          and the cell layer is returned if the elevation is inside it
+        * a **2-D point** (tuple, list or array of length 2): *match*
+          is interpreted as a **horizontal position**, and the cell
+          column is returned if the position is inside it
+        * a **polygon** (tuple, list or array of 2-D points): the cell
+          column is returned if the cell column centroid is inside the
+          polygon
+        * a **3-D point** (tuple, list or array of length 3): the cell
+          is returned if the point is inside it
+
+        If indices is *True*, the cell, column or layer index
+        is returned rather than the cell, column or layer itself.
+
+        In each case, *None* is returned if there is no match.
+        """
+
+        if callable(match):
+            result = self if match(self) else None
+        elif isinstance(match, (float, int)):
+            result = self.layer._find_layer(match)
+        elif isinstance(match, (tuple, list, np.ndarray)):
+            pos = np.array(match)
+            ndim = pos.ndim
+            if ndim == 1:
+                if len(pos) == 1:
+                    result = self.layer_.find_layer(pos[0])
+                elif len(pos) == 2:
+                    result = self.column._find_column(pos)
+                elif len(pos) == 3:
+                    result = self._find_cell(pos)
+                else:
+                    raise Exception('Length of point to find is not between 1 and 3.')
+            elif ndim == 2:
+                if pos.shape[1] == 2:
+                    result = self.column._find_columns(pos)
+                else:
+                    raise Exception('Unrecognised match shape.')
+        else:
+            raise Exception('Unrecognised match type.')
+
+        if result is None: return None
+        else: return result.index if indices else result
+
+class mesh(_layered_object):
     """A mesh can be created either by reading it from a file, or via
         other parameters.
 
@@ -933,160 +1072,92 @@ class mesh(object):
             if col._centroid is not None:
                 col._centroid = np.dot(A, col._centroid) + b
         for lay in self.layer:
-            if lay.quadtree is not None:
-                lay.setup_quadtree()
-
-    def contains_vertical(self, z):
-        """Returns *True* if the mesh has a layer containing the specified
-        elevation *z*, or *False* otherwise."""
-        if self.num_layers == 0:
-            return False
-        else:
-            return self.layer[-1].bottom <= z <= self.layer[0].top
-
-    def contains_horizontal(self, pos):
-        """Returns *True* if the mesh contains the specified 2-D point pos
-        (tuple, list or array of length 2)."""
-        if self.num_layers == 0:
-            return False
-        else:
-            return self.layer[-1].contains(pos)
             lay._quadtree = None
 
-    def contains_point(self, pos):
-        """Returns *True* if the mesh contains the 3-D point pos (tuple, list or
-        array of length 3)."""
-        if self.contains_vertical(pos[2]):
-            lay = self.find_layer(pos[2])
-            return lay.contains(pos[:2])
-        else: return False
+    def _find_column(self, pos):
+        """Returns column containing the 2-D point (tuple, list or array of
+        length 2) *pos*."""
+        if self.num_layers == 0: return None
+        else: return self.layer[-1]._find_column(pos)
 
-    def contains(self, pos):
-        """Returns *True* if the mesh contains the specified elevation,
-        2-D or 3-D point."""
-        if isinstance(pos, (int, float)):
-            return self.contains_vertical(pos)
-        else:
-            l = len(pos)
-            if l == 2: return self.contains_horizontal(pos)
-            elif l == 3: return self.contains_point(pos)
-        raise Exception('Unrecognized input to contains().')
-
-    def find_layer(self, z):
-        """Returns layer containing the elevation z, or *None* if the point is
-        outside the mesh."""
-        if self.num_layers == 0:
-            return None
-        else:
-            if self.layer[-1].bottom <= z <= self.layer[0].top:
-                i0, i1 = 0, self.num_layers - 1
-                while i1 > i0:
-                    im = (i0 + i1) // 2
-                    if z >= self.layer[im].bottom: i1 = im
-                    else: i0 = im + 1
-                return self.layer[i1]
-            else:
-                return None
-
-    def find_column(self, pos):
-        """Returns the column containing the point pos (list, tuple or array
-        of length 2), or *None* if pos is outside the mesh.
+    def _find_columns(self, polygon):
+        """Returns a list of columns with centroids inside the polygon
+        (tuple, list or array of 2-D points, each a tuple, list or
+        array of length 2).
         """
-        if self.num_layers == 0:
-            return None
-        else:
-            c = self.layer[-1].find(pos)
-            return c if c is None else c.column
+        if self.num_layers == 0: return []
+        else: return self.layer[-1]._find_columns(polygon)
 
-    def find_cell(self, pos):
-        """Returns the cell containing the point pos (list, tuple or array of
-        length 3), or *None* if pos is outside the mesh.
+    def _find_cell(self, pos):
+        """Returns the cell containing the 3-D point *pos* (list, tuple or
+        array of length 3), or *None* if *pos* is outside the mesh.
         """
-        lay = self.find_layer(pos[2])
-        if lay is None:
-            return None
-        else:
-            return lay.find(pos[:2])
+        lay = self._find_layer(pos[2])
+        if lay is None: return None
+        else: return lay._find_cell(pos)
 
-    def find(self, match, indices = False):
-        """Returns cell or cells matching the specified matching
-        criterion.
+    def find(self, match, indices = False, sort = False):
+        """Returns cells, columns or layers satisfying the criterion *match*.
 
-        The match parameter can be a function taking a cell
-        and returning a Boolean, in which case a list of matching
-        cells is returned.
+        The *match* parameter can be:
 
-        Alternatively it can be a 3-D point (tuple,
-        list or array), in which case the cell containing the
-        point is returned, or a 2-D point, in which case the column
-        containing the point is returned, or a 1-D point or scalar,
-        in which case the layer containing the elevation is returned.
+        * a **function** taking a cell and returning a Boolean: a list
+          of matching cells is returned
+        * a **scalar**: *match* is interpreted as an **elevation**,
+          and the layer containing it is returned
+        * a **2-D point** (tuple, list or array of length 2): *match*
+          is interpreted as a **horizontal position**, and the mesh column
+          containing it is returned
+        * a **polygon** (tuple, list or array of 2-D points): a list of
+          mesh columns inside the polygon are returned
+        * a **3-D point** (tuple, list or array of length 3): *match*
+          is interpreted as a **3-D position**, and the mesh cell
+          containing it is returned
 
-        If indices is *True*, the cell (or column or layer) indices are
-        returned rather than the cells, columns or layers themselves.
+        If indices is *True*, the cell, column or layer indices
+        are returned rather than the cells, columns or layers
+        themselves.
+
+        If *sort* is *True*, then lists of results are sorted by index.
+
+        If no match is found, then *None* is returned, except when the
+        expected result is a list, in which case an empty list is
+        returned.
         """
 
-        if isinstance(match, (tuple, list, np.ndarray)):
-            if len(match) == 3:
-                c = self.find_cell(match)
-                if c is None: return None
-                else: return c.index if indices else c
-            elif len(match) == 2:
-                c = self.find_column(match)
-                if c is None: return None
-                else: return c.index if indices else c
-            elif len(match) == 1:
-                l = self.find_layer(match[0])
-                if l is None: return None
-                else: return l.index if indices else l
-            else:
-                raise Exception('Length of point to find is not between 1 and 3.')
+        if callable(match):
+            result = [c for c in self.cell if match(c)]
         elif isinstance(match, (float, int)):
-            l = self.find_layer(match)
-            if l is None: return None
-            else: return l.index if indices else l
-        elif callable(match):
-            cells = [c for c in self.cell if match(c)]
-            if cells:
-                return [c.index for c in cells] if indices else cells
-            else: return []
+            result = self._find_layer(match)
+        elif isinstance(match, (tuple, list, np.ndarray)):
+            pos = np.array(match)
+            if pos.ndim == 1:
+                if len(pos) == 1:
+                    result = self._find_layer(pos[0])
+                elif len(pos) == 2:
+                    result = self._find_column(pos)
+                elif len(pos) == 3:
+                    result = self._find_cell(pos)
+                else:
+                    raise Exception('Length of point to find is not between 1 and 3.')
+            elif pos.ndim == 2:
+                if pos.shape[1] == 2:
+                    result = self._find_columns(pos)
+                else:
+                    raise Exception('Unrecognised match shape.')
+            else:
+                raise Exception('Unrecognised match shape.')
         else:
             raise Exception('Unrecognised match type.')
 
-    def columns_inside(self, polygon, indices = False):
-        """Returns a list of mesh columns inside the specified polygon. If
-        indices is *True*, column indices are returned instead of columns."""
-
-        cols = self.layer[-1].columns_inside(polygon)
-        return [col.index for col in cols] if indices else cols
-
-    def cells_inside(self, polygon, elevations = None, sort = True, indices = False):
-        """Returns a list of cells in the mesh with columns inside the
-        specified polygon.
-
-        Specifying the elevations parameter as a two-element
-        list, tuple or array means only cells inside that elevation range are returned.
-
-        If sort is *True*, the returned cells are sorted by cell index. If indices is
-        *True*, cell indices are returned instead of cells."""
-
-        cols = self.columns_inside(polygon)
-        cells = []
-        if elevations is None:
-            for col in cols:
-                cells += col.cell
-        else:
-            for col in cols:
-                cells += [c for c in col.cell
-                          if elevations[0] <= c.layer.centre <= elevations[1]]
-        if cells:
+        if result is None: return None
+        elif isinstance(result, list):
             if sort:
-                isort = np.argsort(np.array([c.index for c in cells]))
-                return [cells[i].index for i in isort] if indices \
-                    else [cells[i] for i in isort]
-            else:
-                return [c.index for c in cells] if indices else cells
-        else: return []
+                isort = np.argsort(np.array([r.index for r in result]))
+                result = [result[i] for i in isort]
+            return [r.index for r in result] if indices else result
+        else:
+            return result.index if indices else result
 
     def column_track(self, line):
         """Returns a list of tuples of (column, entry_point, exit_point)
@@ -1335,7 +1406,7 @@ class mesh(object):
 
     def slice_plot(self, line = 'x', **kwargs):
         """Creates a 2-D Matplotlib plot of the mesh through a specified
-        vertical slice. The horizontal line defining the slice can be either:
+        vertical slice. The horizontal *line* defining the slice can be either:
 
         * *'x'*: to plot through the mesh centre along the *x*-axis
         * *'y'*: to plot through the mesh centre along the *y*-axis

@@ -169,70 +169,19 @@ class meshTestCase(unittest.TestCase):
         points, cells = m.meshio_points_cells
         self.assertEqual(len(cells['hexahedron']), 21)
 
-    def test_contains(self):
-
-        m = mesh.mesh()
-        self.assertFalse(m.contains(1))
-        self.assertFalse(m.contains([3, 4]))
-        self.assertFalse(m.contains(np.array([3, 4, 5])))
-
-        dx = [10, 20, 30]; dy = [20, 15, 10]
-        dz = [5, 10, 15]
-        surface = [0.2, -9, -18] * 3
-        m = mesh.mesh(rectangular = (dx, dy, dz), surface = surface)
-
-        col = m.column[0]
-
-        self.assertTrue(col.contains(-10))
-        self.assertTrue(col.contains(-0.1))
-        self.assertFalse(col.contains(0.5))
-        self.assertFalse(col.contains(-31))
-
-        self.assertTrue(col.contains((7, 1)))
-        self.assertFalse(col.contains([11, 5]))
-        self.assertFalse(col.contains(np.array([-1, 5])))
-
-        self.assertTrue(col.contains((7, 1, -15)))
-        self.assertFalse(col.contains((7, 1, 15)))
-
-        lay = m.layer[1]
-
-        self.assertTrue(lay.contains(-12))
-        self.assertFalse(lay.contains(-1))
-        self.assertFalse(lay.contains(-21.5))
-
-        self.assertTrue(lay.contains((12.0, 1)))
-        self.assertTrue(lay.contains((7, 23.1)))
-        self.assertFalse(lay.contains((33, 25.4)))
-        self.assertFalse(lay.contains((-2.1, 2.4)))
-
-        self.assertTrue(lay.contains((7, 23.1, -14)))
-        self.assertFalse(lay.contains([31.3, 23.1, -14]))
-
-        self.assertTrue(m.contains(-12))
-        self.assertTrue(m.contains(-0.1))
-        self.assertFalse(m.contains(-35.4))
-
-        self.assertTrue(m.contains((12.0, 1)))
-        self.assertFalse(m.contains((-12.0, 12.0)))
-        self.assertFalse(m.contains([15, 50]))
-
-        self.assertTrue(m.contains((7, 37, -4)))
-        self.assertFalse(m.contains([7, 1, 15]))
-        self.assertFalse(m.contains([30, -1.1, -20]))
-
     def test_find(self):
 
-        m = mesh.mesh()
-        c = m.find((0,0,0))
-        self.assertIsNone(c)
-        col = m.find((0,0))
-        self.assertIsNone(col)
-        lay = m.find(-1)
-        self.assertIsNone(lay)
-        cells = m.find(lambda c: True)
-        self.assertEqual(cells, [])
+        poly = [[8, -5], [11, 40], [20, 35], [40, 10], [20, -5]]
 
+        # null mesh:
+        m = mesh.mesh()
+        self.assertEqual(m.find(lambda c: True), [])
+        self.assertIsNone(m.find(-1))
+        self.assertIsNone(m.find((0,0)))
+        self.assertEqual(m.find(poly), [])
+        self.assertIsNone(m.find((0,0,0)))
+
+        # rectangular mesh:
         dx = [10, 20, 30]; dy = [20, 15, 10]
         dz = [5, 10, 15]
         surface = [0.2, -9, -18] * 3
@@ -241,48 +190,7 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(m.num_cells, 18)
         self.assertEqual(m.volume, 56250)
 
-        p = (8, 5, -2)
-        c = m.find(p)
-        self.assertEqual(c.index, 0)
-
-        p = [25, 25, -12]
-        c = m.find(p, indices = True)
-        self.assertEqual(c, 6)
-
-        p = [25, 25, -4]
-        c = m.find(p)
-        self.assertIsNone(c)
-
-        p = np.array([40, 50, -20])
-        c = m.find(p)
-        self.assertIsNone(c)
-
-        c = m.find([5, 8], indices = True)
-        self.assertEqual(0, c)
-
-        c = m.find([-10, -10])
-        self.assertIsNone(c)
-
-        l = m.find(-25, indices = True)
-        self.assertEqual(2, l)
-
-        poly = [[8, -5], [11, 40], [20, 35], [40, 10], [20, -5]]
-        cells = m.layer[-1].find(poly, indices = True)
-        self.assertEqual(cells, [10, 13])
-        cells = m.layer[1].find(poly, indices = True)
-        self.assertEqual(cells, [4, 6])
-        cells = m.layer[0].find(poly)
-        self.assertEqual(cells, [])
-
-        c = m.layer[-1].find([45., 42.], indices = True)
-        self.assertEqual(c, 17)
-        c = m.layer[1].find([45., 42.])
-        self.assertIsNone(c)
-
-        cells = m.layer[-1].find(lambda c: c.column.centre[1] > 30,
-                                 indices = True)
-        self.assertEqual(cells, [15, 16, 17])
-
+        # mesh match function:
         cells = m.find(lambda c: c.index == 0)
         self.assertEqual(len(cells), 1)
         self.assertEqual(cells[0].index, 0)
@@ -302,27 +210,159 @@ class meshTestCase(unittest.TestCase):
         cells = m.find(lambda c: not c.surface)
         self.assertEqual(len(cells), 9)
 
-        rect = [(0,0), (30, 35)]
-        cells = m.cells_inside(rect)
-        self.assertEqual(len(cells), 10)
-        cells = m.cells_inside(rect, elevations = [-30, -20])
-        self.assertEqual(len(cells), 4)
-        cols = m.columns_inside(rect)
-        self.assertEqual(len(cols), 4)
+        # mesh elevation:
+        lay = m.find(-25, indices = True)
+        self.assertEqual(2, lay)
+        lay = m.find(5)
+        self.assertIsNone(lay)
 
+        # mesh 2-D point:
+        c = m.find([5, 8], indices = True)
+        self.assertEqual(0, c)
+
+        c = m.find([-10, -10])
+        self.assertIsNone(c)
+
+        p = (8, 5, -2)
+        c = m.find(p)
+        self.assertEqual(c.index, 0)
+
+        # mesh 3-D point:
+        c = m.find([25, 25, -12], indices = True)
+        self.assertEqual(c, 6)
+
+        c = m.find([25, 25, -4])
+        self.assertIsNone(c)
+
+        c = m.find(np.array([40, 50, -20]))
+        self.assertIsNone(c)
+        
+        # mesh polygon:
+        cols = m.find(poly, indices = True, sort = True)
+        self.assertEqual(cols, [1, 4])
+        cols = m.layer[1].find(poly, indices = True, sort = True)
+        self.assertEqual(cols, [1, 4])
+        cells = m.layer[0].find(poly)
+        self.assertEqual(cells, [])
+
+        # layer function:
+        cells = m.layer[-1].find(lambda c: c.column.centre[1] > 30,
+                                 indices = True)
+        self.assertEqual(cells, [15, 16, 17])
+
+        # layer elevation:
+        self.assertIsNone(m.layer[1].find(-17))
+        self.assertIsNotNone(m.layer[0].find(-4))
+        self.assertIsNotNone(m.layer[0].find(-0.1))
+
+        # layer 2-D point:
+        col = m.layer[-1].find([45., 42.], indices = True)
+        self.assertEqual(col, 8)
+        col = m.layer[1].find([45., 42.])
+        self.assertIsNone(col)
+
+        # layer polygon:
+        cols = m.layer[0].find(poly)
+        self.assertEqual(cols, [])
+        cols = m.layer[1].find(poly, indices = True, sort = True)
+        self.assertEqual(cols, [1, 4])
+        
+        # layer 3-D point:
+        p = [17, 40, -13]
+        c = m.layer[1].find(p)
+        self.assertIsNotNone(c)
+        self.assertIsNotNone(c.find(p))
+
+        p = np.array([42, 40, -13])
+        c = m.layer[1].find(p)
+        self.assertIsNone(c)
+
+        # column function:
+        col = m.column[3]
+        cells = col.find(lambda c: c.centre[2] < -6, sort = True, indices = True)
+        self.assertEqual(cells, [5, 12])
+        
+        cells = col.find(lambda c: c.volume < 1000 , sort = True, indices = True)
+        self.assertEqual(cells, [1])
+
+        # column elevation:
+        col = m.column[7]
+        lay = col.find(-20)
+        self.assertEqual(lay.index, 2)
+        lay = col.find(-7, indices = True)
+        self.assertEqual(lay, 1)
+        lay = col.find(-4)
+        self.assertIsNone(lay)
+        lay = col.find(-4, indices = True)
+        self.assertIsNone(lay)
+
+        # column 2-D point:
+        self.assertIsNone(col.find((25, 20)))
+        self.assertIsNotNone(col.find([25, 38]))
+
+        # column polygon:
+        self.assertIsNone(m.column[7].find(poly))
+        self.assertIsNone(m.column[2].find(poly))
+        self.assertIsNotNone(m.column[1].find(poly))
+        self.assertIsNotNone(m.column[4].find(poly))
+
+        # column 3-D point:
+        c = col.find((11, 40, -10))
+        self.assertIsNotNone(c)
+        self.assertEqual(c.index, 8)
+        c = col.find((11, 40, -4))
+        self.assertIsNone(c)
+
+        # cell function:
+        c = m.cell[14]
+        f = lambda c: c.volume > 4000
+        self.assertIsNotNone(c.find(f))
+        f = lambda c: c.volume < 4000
+        self.assertIsNone(c.find(f))
+
+        # cell elevation:
+        self.assertIsNone(c.find(-9))
+        self.assertIsNotNone(c.find(-19))
+
+        # cell 2-D point:
+        self.assertIsNone(c.find((30, 18)))
+        self.assertIsNotNone(c.find((50, 31)))
+
+        # cell polygon:
+        self.assertIsNone(m.cell[14].find(poly))
+        self.assertIsNotNone(m.cell[4].find(poly))
+
+        # cell 3-D point:
+        self.assertIsNone(c.find([30, 18, -20]))
+        self.assertIsNotNone(c.find((50, 31, -29)))
+
+        # node:
+        self.assertIsNone(m.node[2].find(poly))
+        self.assertIsNotNone(m.node[5].find(poly))
+        
+        # transform mesh to test quadtree:
         m.translate((100, 0, 10))
         c = m.find([105, 8], indices = True)
         self.assertEqual(0, c)
         c = m.find([132, 40], indices = True)
         self.assertEqual(8, c)
 
+        col = m.layer[1].find((120, 30), indices = True)
+        self.assertEqual(col, 4)
+        col = m.layer[1].find((20, 30))
+        self.assertIsNone(col)
+
         l = m.find(-15, indices = True)
         self.assertEqual(2, l)
 
         m.translate((-100, 0, -10))
         m.rotate(90, [0, 0])
-        c = m.find([30, -50], indices = True)
-        self.assertEqual(5, c)
+        col = m.find([30, -50], indices = True)
+        self.assertEqual(5, col)
+        c = m.find([8, -8, -20])
+        self.assertEqual(c.index, 9)
+        c = m.find([8, -8, -10], indices = True)
+        self.assertEqual(c, 3)
 
     def test_column_track(self):
 
@@ -453,7 +493,7 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(m.num_nodes, 5 * 17 + 8 * 9)
 
         m = mesh.mesh(rectangular = (dx, dy, dz))
-        cols = m.columns_inside([(0,0), (400, 500)])
+        cols = m.find([(0,0), (400, 500)])
         self.assertEqual(len(cols), 12)
         m.refine(cols)
         self.assertEqual(m.area, original_area)
@@ -475,7 +515,7 @@ class meshTestCase(unittest.TestCase):
         m = mesh.mesh(rectangular = (dx, dy, dz))
         original_area = m.area
 
-        cols = m.columns_inside([(400, 400), (600, 600)])
+        cols = m.find([(400, 400), (600, 600)])
         m.refine(cols)
 
         triangles = [col for col in m.column if col.num_nodes == 3]
@@ -485,6 +525,11 @@ class meshTestCase(unittest.TestCase):
         faces = m.column_faces()
         cosines = np.array([f.angle_cosine for f in faces])
         self.assertTrue(np.max(np.abs(cosines)) < 0.1)
+
+        p = (500, 500, -24)
+        c = m.find(p)
+        self.assertIsNotNone(c)
+        self.assertIsNotNone(c.find(p))
 
 if __name__ == '__main__':
 

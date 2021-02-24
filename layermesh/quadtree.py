@@ -67,7 +67,7 @@ class quadtree(object):
         done = []
         while len(todo) > 0:
             elt = todo.pop(0)
-            if elt.contains(pos): return elt
+            if elt.find(pos): return elt
             done.append(elt)
             for nbr in elt.neighbour & self.all_elements:
                 if rectangles_intersect(nbr.bounding_box, self.bounds) and \
