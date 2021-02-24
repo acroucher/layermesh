@@ -1020,7 +1020,7 @@ class mesh(_layered_object):
 
     def _get_surface_cells(self):
         return [col.cell[0] for col in self.column]
-    #: List of cells at the surface of the mesh."""
+    #: List of cells at the surface of the mesh.
     surface_cells = property(_get_surface_cells)
 
     def column_faces(self, columns = None):
