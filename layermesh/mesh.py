@@ -249,8 +249,9 @@ class layer(object):
         self.top = top #: Top elevation of the layer.
         self.index = index #: Layer index in the mesh (numbered from top down).
         self._centre = None
-        #: Quadtree object for column searching within the layer.
-        self.quadtree = None
+        self.cell = None #: List of cells in the layer.
+        self.column_cell = None #: Dictionary of cells, keyed by column indices.
+        self._quadtree = None
 
     def __repr__(self):
         return str(self.index)
@@ -301,11 +302,14 @@ class layer(object):
     #: bounding box).
     horizontal_bounds = property(_get_horizontal_bounds)
 
-    def setup_quadtree(self):
-        """Sets up quadtree for column searching."""
-        from layermesh import quadtree
-        self.quadtree = quadtree.quadtree(self.horizontal_bounds,
-                                          self.column)
+    def _get_quadtree(self):
+        if self._quadtree is None:
+            from layermesh import quadtree
+            self._quadtree = quadtree.quadtree(self.horizontal_bounds,
+                                               self.column)
+        return self._quadtree
+    #: Quadtree object for column searching within the layer.
+    quadtree = property(_get_quadtree)
 
     def translate(self, shift):
         """Translates layer by specified 3-D shift (a tuple, list or array of
@@ -314,8 +318,6 @@ class layer(object):
         self.top += shift[2]
         if self._centre is not None:
             self._centre += shift[2]
-        if self.quadtree is not None:
-            self.quadtree.translate(shift[:2])
 
     def contains_vertical(self, z):
         """Returns *True* if the layer contains the specified elevation *z*,
@@ -352,6 +354,8 @@ class layer(object):
         """Returns cell in layer with column containing the 2-D point *pos* (a
         tuple, list or array of length 2). If no column in the
         layer contains this point then *None* is returned.
+        if self._quadtree is not None:
+            self._quadtree.translate(shift[:2])
         """
 
         if self.quadtree is None: self.setup_quadtree()
@@ -947,6 +951,7 @@ class mesh(object):
             return False
         else:
             return self.layer[-1].contains(pos)
+            lay._quadtree = None
 
     def contains_point(self, pos):
         """Returns *True* if the mesh contains the 3-D point pos (tuple, list or
