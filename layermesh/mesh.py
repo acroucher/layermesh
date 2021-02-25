@@ -324,6 +324,7 @@ class layer(object):
         self.top = top #: Top elevation of the layer.
         self.index = index #: Layer index in the mesh (numbered from top down).
         self._centre = None
+        self.column = None #: List of columns in the layer.
         self.cell = None #: List of cells in the layer.
         self.column_cell = None #: Dictionary of cells, keyed by column indices.
         self._quadtree = None
