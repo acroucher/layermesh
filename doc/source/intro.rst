@@ -47,6 +47,21 @@ account:
 This will download and install Layermesh from the Python Package Index
 (`PyPI <https://pypi.org>`_).
 
+Dependencies
+============
+
+Layermesh depends on several other Python libraries:
+
+* ``numpy``: `Numerical Python <https://numpy.org/>`_
+* ``scipy``: `Scientific Python <https://www.scipy.org/>`_
+* ``h5py``: Python `interface <https://www.h5py.org/>`_ for HDF5
+* ``meshio``: Python library for `mesh file input/output
+  <https://pypi.org/project/meshio/>`_
+* ``matplotlib``: Python `plotting library <https://matplotlib.org/>`_
+
+These will be installed automatically if not already present, if
+``pip`` is used as above to install Layermesh.
+
 Licensing
 =========
 

@@ -1,5 +1,7 @@
-layermesh
-=========
+.. _layermeshapi:
+
+layermesh API
+=============
 
 .. toctree::
    :maxdepth: 4
