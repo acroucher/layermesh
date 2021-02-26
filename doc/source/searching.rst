@@ -217,3 +217,7 @@ For example:
 
 executes a conditional if cell 2 in the mesh contains the 3-D point
 (230, 540, -250).
+
+Passing a polygon into a cell's ``find()`` method will return the
+cell's column if its centroid is inside the polygon (or ``None``
+otherwise).
