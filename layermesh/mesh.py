@@ -964,19 +964,18 @@ class mesh(_layered_object):
             if 'node' in f:
                 node_group = f['node']
                 if 'position' in node_group:
-                    index = 0
-                    for p in np.array(node_group['position']):
+                    for index, p in enumerate(np.array(node_group['position'])):
                         n = node(pos = p, index = index)
-                        self.add_node(n); index += 1
-                    index = 0
+                        self.add_node(n)
                     if 'column' in f:
                         col_group = f['column']
                         if 'node' in col_group:
-                            for col_node_indices in np.array(col_group['node']):
+                            for index, col_node_indices in \
+                                enumerate(np.array(col_group['node'])):
                                 col_nodes = [self.node[i]
                                              for i in col_node_indices]
                                 col = column(node = col_nodes, index = index)
-                                self.add_column(col); index += 1
+                                self.add_column(col)
                             if 'num_layers' in col_group:
                                 num_layers = np.array(col_group['num_layers'])
         self.set_column_layers(num_layers)
