@@ -1547,8 +1547,7 @@ class mesh(_layered_object):
 
         The data should be in the form of a 3-column array with x,y,z
         data in each row. Fitting can be carried out over a subset of
-        the mesh columns by specifying a list or array of column
-        indices.
+        the mesh columns by specifying a tuple or list of columns.
 
         Increasing the smoothing parameter will decrease gradients
         between columns, and a non-zero value must be used to obtain a
@@ -1591,7 +1590,7 @@ class mesh(_layered_object):
 
         The *data* should be in the form of a 3-column array with
         x,y,z data in each row. Fitting can be carried out over a
-        subset of the mesh columns by specifying a list or array of
+        subset of the mesh columns by specifying a tuple or list of
         columns.
 
         Increasing the smoothing parameter will decrease gradients
