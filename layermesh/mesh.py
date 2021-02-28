@@ -1609,13 +1609,25 @@ class mesh(_layered_object):
 
     def refine(self, columns = None):
         """Refines selected columns in the mesh. If no columns are specified,
-        then all columns are refined.
+        then all columns are refined. The *columns* parameter can be a
+        set, tuple or list of column objects.
 
         Each selected column is divided into four new
         columns. Triangular transition columns are added around the
         edge of the refinement area as needed.
 
+        Note that the selected columns must be either triangular or
+        quadrilateral (columns with more than four edges cannot be
+        refined).
+
+        Mesh refinement will generally alter the indexing of the mesh
+        nodes, columns and cells, even those not within the refinement
+        area. Hence, it should not be assumed, for example, that
+        columns outside the refinement area will retain their original
+        indices after the refinement.
+
         Based on the mulgrid refine() method in PyTOUGH.
+
         """
 
         from copy import copy
