@@ -1770,7 +1770,8 @@ class mesh(_layered_object):
         * 'aspect': the aspect ratio of the columns
 
         Omitting any of these keys from the *weight* parameter will
-        give them zero weight.
+        give them zero weight. Weights need not sum to 1: only their
+        relative magnitudes matter.
 
         The optimization is carried out by using the ``leastsq()``
         function from the ``scipy.optimize`` module to minimize an
