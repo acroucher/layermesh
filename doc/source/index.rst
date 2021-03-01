@@ -11,7 +11,7 @@ Layermesh user guide
    :caption: Contents:
 
    intro
-   usage
+   start
    modules
 
 .. only:: html

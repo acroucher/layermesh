@@ -1,6 +1,6 @@
 .. _layermeshapi:
 
-layermesh API
+Layermesh API
 =============
 
 .. toctree::
