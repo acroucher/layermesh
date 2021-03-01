@@ -1049,6 +1049,11 @@ class mesh(_layered_object):
             nodes = nodes | set(col.node)
         return nodes
 
+    def type_columns(self, num_nodes):
+        """Returns a list of mesh columns of a specified type, i.e. number of
+        nodes."""
+        return [col for col in self.column if col.num_nodes == num_nodes]
+
     def translate(self, shift):
         """Translates the mesh by the specified 3-D shift vector (tuple, list
         or array of length 3)."""

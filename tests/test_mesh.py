@@ -24,6 +24,8 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(m.num_cells, 27)
         faces = m.column_faces()
         self.assertEqual(len(faces), 12)
+        self.assertEqual(len(m.type_columns(4)), 9)
+        self.assertEqual(m.type_columns(3), [])
 
         self.assertTrue(np.allclose(m.node[0].pos, np.zeros(2)))
         self.assertTrue(np.allclose(m.node[-1].pos, np.array([30., 36.])))
@@ -483,6 +485,7 @@ class meshTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(m.centre, original_centre))
         self.assertEqual(m.num_columns, 20 * 16)
         self.assertEqual(m.num_nodes, 21 * 17)
+        self.assertEqual(len(m.type_columns(3)), 0)
 
         m = mesh.mesh(rectangular = (dx, dy, dz))
         cols = [col for col in m.column if col.centre[0] < 200]
@@ -491,6 +494,7 @@ class meshTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(m.centre, original_centre))
         self.assertEqual(m.num_columns, 16 * 4 + 8 * 3 + 7 * 8)
         self.assertEqual(m.num_nodes, 5 * 17 + 8 * 9)
+        self.assertEqual(len(m.type_columns(3)), 24)
 
         m = mesh.mesh(rectangular = (dx, dy, dz))
         cols = m.find([(0,0), (400, 500)])
@@ -500,6 +504,7 @@ class meshTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(m.centre, original_centre))
         self.assertEqual(m.num_columns, 12 * 4 + 7 * 3 + 16 + 5 + 8 * 5)
         self.assertEqual(m.num_nodes, 9 * 7 + 5 * 5 + 9 * 6)
+        self.assertEqual(len(m.type_columns(3)), 21)
 
         m = mesh.mesh(rectangular = (dx, dy, dz))
         m.rotate(30)
