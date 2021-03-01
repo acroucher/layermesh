@@ -1,3 +1,4 @@
+.. index:: Layermesh; API
 .. _layermeshapi:
 
 Layermesh API

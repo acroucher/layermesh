@@ -1,3 +1,5 @@
+.. index:: mesh; plotting
+
 Creating 2-D plots
 ==================
 
@@ -14,6 +16,8 @@ Layermesh ``mesh`` objects have two methods for creating plots:
 In either case, the `Matplotlib <https://matplotlib.org/>`_ library is
 used to create the plot, which can be either viewed directly on the
 display or saved to an image file.
+
+.. index:: mesh; layer plots
 
 Layer plots
 -----------
@@ -35,6 +39,8 @@ Examples:
   m.layer_plot(lay) # plot layer 2
 
   m.layer_plot(elevation = -1350) # plot layer containing elevation -1350
+
+.. index:: mesh; slice plots
 
 Slice plots
 -----------

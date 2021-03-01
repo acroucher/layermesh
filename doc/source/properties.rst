@@ -1,3 +1,5 @@
+.. index:: mesh; properties
+
 Mesh properties
 ===============
 

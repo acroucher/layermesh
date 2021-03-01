@@ -1,3 +1,4 @@
+.. index:: mesh; refinement
 .. _refine:
 
 Horizontal refinement

@@ -1,3 +1,5 @@
+.. index:: mesh; reading, mesh; writing
+
 Reading and writing HDF5 mesh files
 ===================================
 
@@ -21,6 +23,8 @@ filename when creating it:
 
 creates a new ``mesh`` object called ``msh`` and reads its contents
 from the file "mymesh.h5".
+
+.. index:: mesh; HDF files
 
 Layermesh HDF5 files have a simple structure with four groups:
 

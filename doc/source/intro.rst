@@ -27,6 +27,8 @@ such meshes, including:
 * mesh searching, to locate particular cells, columns or layers
 * 2-D layer and vertical slice plots (via `Matplotlib <https://matplotlib.org/>`_)
 
+.. index:: Layermesh; installing
+
 Installation
 ============
 
@@ -47,6 +49,8 @@ account:
 This will download and install Layermesh from the Python Package Index
 (`PyPI <https://pypi.org>`_).
 
+.. index:: Layermesh; dependencies
+
 Dependencies
 ============
 
@@ -61,6 +65,8 @@ Layermesh depends on several other Python libraries:
 
 These will be installed automatically if not already present, if
 ``pip`` is used as above to install Layermesh.
+
+.. index:: Layermesh; licensing
 
 Licensing
 =========

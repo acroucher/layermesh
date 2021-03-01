@@ -1,3 +1,5 @@
+.. index:: mesh; exporting
+
 Exporting to other formats
 ==========================
 

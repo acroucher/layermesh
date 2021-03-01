@@ -1,3 +1,5 @@
+.. index:: Layermesh; importing
+
 Importing Layermesh in a Python script
 ======================================
 

@@ -1,3 +1,5 @@
+.. index:: mesh; surface elevations
+
 Fitting surface elevation data
 ==============================
 

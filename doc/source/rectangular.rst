@@ -1,3 +1,5 @@
+.. index:: mesh; rectangular
+
 Creating rectangular meshes
 ===========================
 

@@ -1,3 +1,4 @@
+.. index:: mesh; optimizing
 .. _optimize:
 
 Optimizing a mesh

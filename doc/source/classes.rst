@@ -1,3 +1,5 @@
+.. index:: Layermesh; classes, classes
+
 Layermesh classes
 =================
 
@@ -12,6 +14,8 @@ meshes and mesh components.
 
 For full documentation of these classes, see the :ref:`layermeshapi`.
 
+.. index:: classes; mesh
+
 The ``mesh`` class
 ------------------
 
@@ -22,6 +26,8 @@ cells. These are called ``node``, ``column``, ``layer`` and ``cell``
 respectively, and their elements are all objects of the appropriate
 type.
 
+.. index:: classes; node
+
 The ``node`` class
 ------------------
 
@@ -29,6 +35,8 @@ A ``node`` object is defined mainly by its position property ``pos``,
 a ``numpy`` array of length 2, representing its horizontal
 location. It also has a ``column`` property, a set of the columns the
 node belongs to.
+
+.. index:: classes; column
 
 The ``column`` class
 --------------------
@@ -47,6 +55,8 @@ Columns also have geometric properties derived from their node
 positions, e.g. ``area`` and ``centroid``, and a ``surface`` property,
 which is the elevation of the top of the column.
 
+.. index:: classes; layer
+
 The ``layer`` class
 -------------------
 
@@ -62,6 +72,8 @@ columns, as the upper layers may be incomplete.
 
 Layers also have geometric properties derived from their top and
 bottom elevations, e.g. ``centre`` and ``thickness``.
+
+.. index:: classes; cell
 
 The ``cell`` class
 ------------------
