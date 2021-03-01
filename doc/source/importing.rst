@@ -27,3 +27,9 @@ It is possible to import the module under a different name. For example:
 
 imports the mesh module and renames it to ``lm``. Then, mesh commands
 would be prefixed by ``lm`` instead of ``mesh``.
+
+The same thing can also be achieved using:
+
+.. code-block:: python
+
+  import layermesh.mesh as lm

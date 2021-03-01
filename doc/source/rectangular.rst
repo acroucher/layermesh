@@ -10,7 +10,7 @@ For example:
 
 .. code-block:: python
 
-  from layermesh import mesh as lm
+  import layermesh.mesh as lm
   m = lm.mesh(rectangular = ([1000]*10, [800]*12, [100]*8))
 
 creates a simple regular rectangular 10×12×8 cell mesh, with constant
@@ -22,7 +22,7 @@ mesh spacings in in the ``rectangular`` parameter. For example:
 
 .. code-block:: python
 
-  from layermesh import mesh as lm
+  import layermesh.mesh as lm
   import numpy as np
 
   dx = np.arange(1000, 7000, 1000)

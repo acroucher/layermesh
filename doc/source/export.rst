@@ -19,7 +19,7 @@ For example:
 
 .. code-block:: python
 
-   from layermesh import mesh as lm
+   import layermesh.mesh as lm
    m = lm.mesh('mymesh.h5')
    m.export('mymesh.vtu')
    m.export('mymesh.msh')

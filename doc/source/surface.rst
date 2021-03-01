@@ -26,7 +26,7 @@ For example:
 
 .. code-block:: python
 
-  from layermesh import mesh as lm
+  import layermesh.mesh as lm
   import numpy as np
 
   m = lm.mesh(rectangular = ([1000]*10, [800]*12, [100]*8))

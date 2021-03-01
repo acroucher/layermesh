@@ -16,7 +16,7 @@ filename when creating it:
 
 .. code-block:: python
 
-   from layermesh import mesh as lm
+   import layermesh.mesh as lm
    msh = lm.mesh('mymesh.h5')
 
 creates a new ``mesh`` object called ``msh`` and reads its contents
