@@ -1771,6 +1771,12 @@ class mesh(_layered_object):
 
         Omitting any of these keys from the *weight* parameter will
         give them zero weight.
+
+        The optimization is carried out by using the ``leastsq()``
+        function from the ``scipy.optimize`` module to minimize an
+        objective function formed from a weighted combination of the
+        mesh quality measures above.
+
         """
 
         from scipy.optimize import leastsq

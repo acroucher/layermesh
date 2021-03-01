@@ -1,3 +1,5 @@
+.. _refine:
+
 Horizontal refinement
 =====================
 
