@@ -1,2 +1,2 @@
-__all__ = ['geometry', 'mesh']
+__all__ = ['geometry', 'mesh', 'quadtree']
 from . import *
