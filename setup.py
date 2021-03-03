@@ -1,6 +1,6 @@
-from setuptools import setup
+import setuptools
 
-setup(
+setuptools.setup(
     name='layermesh',
     version='0.1',
     description='Library for layered computational meshes',
