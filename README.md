@@ -40,4 +40,4 @@ This will download and install Layermesh from the Python Package Index ([PyPI](h
 
 ## Licensing
 
-Layermesh is open-source software, released under the GNU [Lesser General Public License] (https://www.gnu.org/licenses/lgpl-3.0.en.html) (LGPL) version 3.
+Layermesh is open-source software, released under the GNU [Lesser General Public License] (https://www.gnu.org/licenses/lgpl-3.0.en.html)(LGPL) version 3.
