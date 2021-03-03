@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name='layermesh',
-    version='0.1',
+    version='0.2',
     description='Library for layered computational meshes',
     url='http://github.com/acroucher/layermesh',
     author='Adrian Croucher',
