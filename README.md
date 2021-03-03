@@ -1,4 +1,4 @@
-![Unit tests](https://github.com/acroucher/layermesh/workflows/Unit%20tests/badge.svg) [![Documentation Status](https://readthedocs.org/projects/layermesh/badge/?version=latest)](https://layermesh.readthedocs.io/en/latest/?badge=latest)
+![Unit tests](https://github.com/acroucher/layermesh/workflows/Unit%20tests/badge.svg) [![Documentation Status](https://readthedocs.org/projects/layermesh/badge/?version=latest)](https://layermesh.readthedocs.io/en/latest/?badge=latest) [![PyPI version](https://badge.fury.io/py/layermesh.svg)](https://badge.fury.io/py/layermesh)
 
 # Layermesh
 
