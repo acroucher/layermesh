@@ -169,6 +169,7 @@ class meshTestCase(unittest.TestCase):
         surface = [0.2, -0.8, -1.5] * 3
         m = mesh.mesh(rectangular = (dx, dy, dz), surface = surface)
         points, cells = m.meshio_points_cells
+        self.assertEqual(len(points), 14 * 4)
         self.assertEqual(len(cells['hexahedron']), 21)
 
     def test_find(self):
