@@ -327,8 +327,8 @@ class layer(object):
         self.column = None #: List of columns in the layer.
         self.cell = None #: List of cells in the layer.
         self.column_cell = None #: Dictionary of cells, keyed by column indices.
-        self.above = None #: Layer above this one
-        self.below = None #: Layer below this one
+        self.above = None #: Layer above this one, if it exists, otherwise None.
+        self.below = None #: Layer below this one, if it exists, otherwise None.
         self._quadtree = None
 
     def __repr__(self):
@@ -533,13 +533,13 @@ class cell(object):
                     nbrs.add(lay.column_cell[self.column.index])
         return nbrs
     #: Set of neighbouring cells in the mesh, i.e. those that share a
-    # common face.
+    #: common face.
     neighbour = property(_get_neighbour)
 
     def _get_num_neighbours(self):
         return len(self.neighbour)
     #: Number of neighbouring cells in the mesh, i.e. those that share
-    #a common face.
+    #: a common face.
     num_neighbours = property(_get_num_neighbours)
 
     def _find_layer(self, z):
