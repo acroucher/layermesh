@@ -522,6 +522,26 @@ class cell(object):
     #: Number of nodes in the cell (at both top and bottom of layer).
     num_nodes = property(_get_num_nodes)
 
+    def _get_neighbour(self):
+        nbrs = set()
+        for col in self.column.neighbour:
+            if col.index in self.layer.column_cell:
+                nbrs.add(self.layer.column_cell[col.index])
+        for lay in [self.layer.above, self.layer.below]:
+            if lay is not None:
+                if self.column.index in lay.column_cell:
+                    nbrs.add(lay.column_cell[self.column.index])
+        return nbrs
+    #: Set of neighbouring cells in the mesh, i.e. those that share a
+    # common face.
+    neighbour = property(_get_neighbour)
+
+    def _get_num_neighbours(self):
+        return len(self.neighbour)
+    #: Number of neighbouring cells in the mesh, i.e. those that share
+    #a common face.
+    num_neighbours = property(_get_num_neighbours)
+
     def _find_layer(self, z):
         """Returns cell layer if it contains the specified elevation *z*, or
         *None* otherwise."""

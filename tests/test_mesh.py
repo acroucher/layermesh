@@ -82,6 +82,10 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(m.layer[2].above, m.layer[1])
         self.assertIsNone(m.layer[2].below)
 
+        self.assertEqual(m.cell[0].num_neighbours, 3)
+        self.assertEqual(m.cell[1].num_neighbours, 4)
+        self.assertEqual(m.cell[-1].num_neighbours, 3)
+
     def test_surface(self):
 
         dx = [10.]*3; dy = [12.] * 3
@@ -122,6 +126,12 @@ class meshTestCase(unittest.TestCase):
         self.assertTrue(all([c.surface for c in m.surface_cells]))
         subsurface_cells = list(set(m.cell) - set(m.surface_cells))
         self.assertFalse(any([c.surface for c in subsurface_cells]))
+
+        self.assertEqual(m.cell[0].num_neighbours, 2)
+        self.assertEqual(m.cell[1].num_neighbours, 3)
+        self.assertEqual(m.cell[3].num_neighbours, 4)
+        self.assertEqual(m.cell[7].num_neighbours, 5)
+        self.assertEqual(m.cell[-1].num_neighbours, 3)
 
     def test_translate(self):
 
