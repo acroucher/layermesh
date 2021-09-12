@@ -75,6 +75,13 @@ class meshTestCase(unittest.TestCase):
             self.assertEqual(1, col.angle_ratio)
             self.assertEqual(dy[0] / dx[0], col.face_length_ratio)
 
+        self.assertIsNone(m.layer[0].above)
+        self.assertEqual(m.layer[0].below, m.layer[1])
+        self.assertEqual(m.layer[1].above, m.layer[0])
+        self.assertEqual(m.layer[1].above.below, m.layer[1])
+        self.assertEqual(m.layer[2].above, m.layer[1])
+        self.assertIsNone(m.layer[2].below)
+
     def test_surface(self):
 
         dx = [10.]*3; dy = [12.] * 3

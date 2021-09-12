@@ -327,6 +327,8 @@ class layer(object):
         self.column = None #: List of columns in the layer.
         self.cell = None #: List of cells in the layer.
         self.column_cell = None #: Dictionary of cells, keyed by column indices.
+        self.above = None #: Layer above this one
+        self.below = None #: Layer below this one
         self._quadtree = None
 
     def __repr__(self):
@@ -718,6 +720,9 @@ class mesh(_layered_object):
     def add_layer(self, lay):
         """Adds a layer to the mesh."""
         self.layer.append(lay)
+        if self.num_layers > 1:
+            self.layer[-1].above = self.layer[-2]
+            self.layer[-2].below = self.layer[-1]
 
     def add_column(self, col):
         """Adds a column to the mesh."""
