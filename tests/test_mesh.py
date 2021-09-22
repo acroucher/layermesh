@@ -86,6 +86,11 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(m.cell[1].num_neighbours, 4)
         self.assertEqual(m.cell[-1].num_neighbours, 3)
 
+        self.assertIsNone(m.cell[0].above)
+        self.assertEqual(m.cell[0].below.index, m.cell[9].index)
+        self.assertEqual(m.cell[9].above.index, m.cell[0].index)
+        self.assertIsNone(m.cell[-1].below)
+
     def test_surface(self):
 
         dx = [10.]*3; dy = [12.] * 3

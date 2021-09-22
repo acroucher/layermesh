@@ -522,15 +522,31 @@ class cell(object):
     #: Number of nodes in the cell (at both top and bottom of layer).
     num_nodes = property(_get_num_nodes)
 
+    def _get_column_layer_cell(self, layer):
+        """Returns cell in same column as current cell, in specified layer."""
+        c = None
+        if layer:
+            if self.column.index in layer.column_cell:
+                c = layer.column_cell[self.column.index]
+        return c
+
+    def _get_above(self):
+        return self._get_column_layer_cell(self.layer.above)
+    #: Cell above the current cell, or None if there is no cell above it.
+    above = property(_get_above)
+
+    def _get_below(self):
+        return self._get_column_layer_cell(self.layer.below)
+    #: Cell below the current cell, or None if there is no cell below it.
+    below = property(_get_below)
+
     def _get_neighbour(self):
         nbrs = set()
         for col in self.column.neighbour:
             if col.index in self.layer.column_cell:
                 nbrs.add(self.layer.column_cell[col.index])
-        for lay in [self.layer.above, self.layer.below]:
-            if lay is not None:
-                if self.column.index in lay.column_cell:
-                    nbrs.add(lay.column_cell[self.column.index])
+        for c in [self.above, self.below]:
+            if c: nbrs.add(c)
         return nbrs
     #: Set of neighbouring cells in the mesh, i.e. those that share a
     #: common face.

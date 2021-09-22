@@ -95,7 +95,10 @@ vertical height is given by ``c.layer.thickness``.
 
 A cell also has a ``neighbour`` property, which is a set of its
 neighbouring cells, i.e. those with which it shares a face (either
-horizontal or vertical).
+horizontal or vertical). The cell immediately above or below any cell
+can be found using its ``above`` and ``below`` properties. These
+return ``None`` if there is no cell respectively above or below that
+cell.
 
 Index properties
 ----------------
