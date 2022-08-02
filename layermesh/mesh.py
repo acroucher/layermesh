@@ -976,12 +976,12 @@ class mesh(_layered_object):
                 dset.attrs['description'] = 'Layer boundary elevations, ' + \
                                             'from top to bottom'
             if self.node:
-                max_col_nodes = max([col.num_nodes for col in self.column])
                 pos = np.array([n.pos for n in self.node])
                 node_group = f.create_group('node')
                 dset = node_group.create_dataset('position', data = pos)
                 dset.attrs['description'] = 'Position of each node'
                 if self.column:
+                    max_col_nodes = max([col.num_nodes for col in self.column])
                     col_node_indices = np.full((self.num_columns, max_col_nodes), -1,
                                                dtype = np.int)
                     for i, col in enumerate(self.column):
