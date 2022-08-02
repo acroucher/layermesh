@@ -432,6 +432,8 @@ class meshTestCase(unittest.TestCase):
         dz = [1., 2., 3.]
         s = [0, 0, -1.5, -1.8, -2.1, -2.8, -3, -1, 0]
         m1 = mesh.mesh(rectangular = (dx, dy, dz), surface = s)
+        refine_cols = m1.find([(0, 0), (10, 10)])
+        m1.refine(refine_cols)
         filename = 'mesh.h5'
         m1.write(filename)
 
@@ -439,8 +441,12 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(m1.cell_type_sort, m2.cell_type_sort)
         def nodepos(m): return np.array([n.pos for n in m.node])
         self.assertTrue(np.allclose(nodepos(m1), nodepos(m2)))
-        def cols(m): return np.array([[n.index for n in col.node]
-                                      for col in m.column])
+        def cols(m):
+            maxn = max([col.num_nodes for col in m.column])
+            d = np.full((m.num_columns, maxn), -1, dtype = np.int)
+            for i, col in enumerate(m.column):
+                d[i, 0: col.num_nodes] = [n.index for n in col.node]
+            return d
         self.assertTrue(np.allclose(cols(m1), cols(m2)))
         def lays(m): return np.array([m.layer[0].top] + \
                          [lay.bottom for lay in m.layer])
