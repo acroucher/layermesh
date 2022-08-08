@@ -824,7 +824,7 @@ class mesh(_layered_object):
             lay.column_cell = {}
             for col in lay.column:
                 c = cell(lay, col)
-                cell_type = cell.num_nodes
+                cell_type = c.num_nodes
                 if cell_type not in cells: cells[cell_type] = []
                 cells[cell_type].append(c)
                 lay.cell.append(c)
