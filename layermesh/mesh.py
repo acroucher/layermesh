@@ -983,7 +983,7 @@ class mesh(_layered_object):
                 if self.column:
                     max_col_nodes = max([col.num_nodes for col in self.column])
                     col_node_indices = np.full((self.num_columns, max_col_nodes), -1,
-                                               dtype = np.int)
+                                               dtype = int)
                     for i, col in enumerate(self.column):
                         col_node_indices[i, 0: col.num_nodes] = [n.index for n in col.node]
                     col_group = f.create_group('column')

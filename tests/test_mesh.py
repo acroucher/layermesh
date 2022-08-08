@@ -443,7 +443,7 @@ class meshTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(nodepos(m1), nodepos(m2)))
         def cols(m):
             maxn = max([col.num_nodes for col in m.column])
-            d = np.full((m.num_columns, maxn), -1, dtype = np.int)
+            d = np.full((m.num_columns, maxn), -1, dtype = int)
             for i, col in enumerate(m.column):
                 d[i, 0: col.num_nodes] = [n.index for n in col.node]
             return d
