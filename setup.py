@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name='layermesh',
-    version='0.2',
+    version='0.3.2',
     description='Library for layered computational meshes',
     long_description=long_description,
     long_description_content_type="text/markdown",

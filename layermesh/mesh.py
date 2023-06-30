@@ -327,6 +327,8 @@ class layer(object):
         self.column = None #: List of columns in the layer.
         self.cell = None #: List of cells in the layer.
         self.column_cell = None #: Dictionary of cells, keyed by column indices.
+        self.above = None #: Layer above this one, if it exists, otherwise None.
+        self.below = None #: Layer below this one, if it exists, otherwise None.
         self._quadtree = None
 
     def __repr__(self):
@@ -519,6 +521,42 @@ class cell(object):
         return 2 * self.column.num_nodes
     #: Number of nodes in the cell (at both top and bottom of layer).
     num_nodes = property(_get_num_nodes)
+
+    def _get_column_layer_cell(self, layer):
+        """Returns cell in same column as current cell, in specified layer."""
+        c = None
+        if layer:
+            if self.column.index in layer.column_cell:
+                c = layer.column_cell[self.column.index]
+        return c
+
+    def _get_above(self):
+        return self._get_column_layer_cell(self.layer.above)
+    #: Cell above the current cell, or None if there is no cell above it.
+    above = property(_get_above)
+
+    def _get_below(self):
+        return self._get_column_layer_cell(self.layer.below)
+    #: Cell below the current cell, or None if there is no cell below it.
+    below = property(_get_below)
+
+    def _get_neighbour(self):
+        nbrs = set()
+        for col in self.column.neighbour:
+            if col.index in self.layer.column_cell:
+                nbrs.add(self.layer.column_cell[col.index])
+        for c in [self.above, self.below]:
+            if c: nbrs.add(c)
+        return nbrs
+    #: Set of neighbouring cells in the mesh, i.e. those that share a
+    #: common face.
+    neighbour = property(_get_neighbour)
+
+    def _get_num_neighbours(self):
+        return len(self.neighbour)
+    #: Number of neighbouring cells in the mesh, i.e. those that share
+    #: a common face.
+    num_neighbours = property(_get_num_neighbours)
 
     def _find_layer(self, z):
         """Returns cell layer if it contains the specified elevation *z*, or
@@ -718,6 +756,9 @@ class mesh(_layered_object):
     def add_layer(self, lay):
         """Adds a layer to the mesh."""
         self.layer.append(lay)
+        if self.num_layers > 1:
+            self.layer[-1].above = self.layer[-2]
+            self.layer[-2].below = self.layer[-1]
 
     def add_column(self, col):
         """Adds a column to the mesh."""
@@ -783,7 +824,7 @@ class mesh(_layered_object):
             lay.column_cell = {}
             for col in lay.column:
                 c = cell(lay, col)
-                cell_type = cell.num_nodes
+                cell_type = c.num_nodes
                 if cell_type not in cells: cells[cell_type] = []
                 cells[cell_type].append(c)
                 lay.cell.append(c)
@@ -940,8 +981,11 @@ class mesh(_layered_object):
                 dset = node_group.create_dataset('position', data = pos)
                 dset.attrs['description'] = 'Position of each node'
                 if self.column:
-                    col_node_indices = np.array([[n.index for n in col.node]
-                                                 for col in self.column])
+                    max_col_nodes = max([col.num_nodes for col in self.column])
+                    col_node_indices = np.full((self.num_columns, max_col_nodes), -1,
+                                               dtype = int)
+                    for i, col in enumerate(self.column):
+                        col_node_indices[i, 0: col.num_nodes] = [n.index for n in col.node]
                     col_group = f.create_group('column')
                     dset = col_group.create_dataset('node', data = col_node_indices)
                     dset.attrs['description'] = 'Indices of nodes in each column'
@@ -973,7 +1017,7 @@ class mesh(_layered_object):
                             for index, col_node_indices in \
                                 enumerate(np.array(col_group['node'])):
                                 col_nodes = [self.node[i]
-                                             for i in col_node_indices]
+                                             for i in col_node_indices if i >= 0]
                                 col = column(node = col_nodes, index = index)
                                 self.add_column(col)
                             if 'num_layers' in col_group:

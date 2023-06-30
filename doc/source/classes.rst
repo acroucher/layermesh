@@ -70,6 +70,11 @@ containing the columns and cells in the layer, as well as a
 index. Note that different layers may have different numbers of
 columns, as the upper layers may be incomplete.
 
+Each layer in a mesh has ``above`` and ``below`` properties, which are
+the layer objects above and below that layer, if they exist. If not
+(e.g. for the ``below`` property of the bottom layer), they have the
+value ``None``.
+
 Layers also have geometric properties derived from their top and
 bottom elevations, e.g. ``centre`` and ``thickness``.
 
@@ -87,6 +92,13 @@ Cells have geometric properties such as ``volume`` and
 ``column`` and ``layer`` properties. For example, for a cell object
 ``c``, the horizontal area is given by ``c.column.area``, and its
 vertical height is given by ``c.layer.thickness``.
+
+A cell also has a ``neighbour`` property, which is a set of its
+neighbouring cells, i.e. those with which it shares a face (either
+horizontal or vertical). The cell immediately above or below any cell
+can be found using its ``above`` and ``below`` properties. These
+return ``None`` if there is no cell respectively above or below that
+cell.
 
 Index properties
 ----------------

@@ -75,6 +75,22 @@ class meshTestCase(unittest.TestCase):
             self.assertEqual(1, col.angle_ratio)
             self.assertEqual(dy[0] / dx[0], col.face_length_ratio)
 
+        self.assertIsNone(m.layer[0].above)
+        self.assertEqual(m.layer[0].below, m.layer[1])
+        self.assertEqual(m.layer[1].above, m.layer[0])
+        self.assertEqual(m.layer[1].above.below, m.layer[1])
+        self.assertEqual(m.layer[2].above, m.layer[1])
+        self.assertIsNone(m.layer[2].below)
+
+        self.assertEqual(m.cell[0].num_neighbours, 3)
+        self.assertEqual(m.cell[1].num_neighbours, 4)
+        self.assertEqual(m.cell[-1].num_neighbours, 3)
+
+        self.assertIsNone(m.cell[0].above)
+        self.assertEqual(m.cell[0].below.index, m.cell[9].index)
+        self.assertEqual(m.cell[9].above.index, m.cell[0].index)
+        self.assertIsNone(m.cell[-1].below)
+
     def test_surface(self):
 
         dx = [10.]*3; dy = [12.] * 3
@@ -115,6 +131,12 @@ class meshTestCase(unittest.TestCase):
         self.assertTrue(all([c.surface for c in m.surface_cells]))
         subsurface_cells = list(set(m.cell) - set(m.surface_cells))
         self.assertFalse(any([c.surface for c in subsurface_cells]))
+
+        self.assertEqual(m.cell[0].num_neighbours, 2)
+        self.assertEqual(m.cell[1].num_neighbours, 3)
+        self.assertEqual(m.cell[3].num_neighbours, 4)
+        self.assertEqual(m.cell[7].num_neighbours, 5)
+        self.assertEqual(m.cell[-1].num_neighbours, 3)
 
     def test_translate(self):
 
@@ -169,6 +191,7 @@ class meshTestCase(unittest.TestCase):
         surface = [0.2, -0.8, -1.5] * 3
         m = mesh.mesh(rectangular = (dx, dy, dz), surface = surface)
         points, cells = m.meshio_points_cells
+        self.assertEqual(len(points), 14 * 4)
         self.assertEqual(len(cells['hexahedron']), 21)
 
     def test_find(self):
@@ -409,6 +432,8 @@ class meshTestCase(unittest.TestCase):
         dz = [1., 2., 3.]
         s = [0, 0, -1.5, -1.8, -2.1, -2.8, -3, -1, 0]
         m1 = mesh.mesh(rectangular = (dx, dy, dz), surface = s)
+        refine_cols = m1.find([(0, 0), (10, 10)])
+        m1.refine(refine_cols)
         filename = 'mesh.h5'
         m1.write(filename)
 
@@ -416,8 +441,12 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(m1.cell_type_sort, m2.cell_type_sort)
         def nodepos(m): return np.array([n.pos for n in m.node])
         self.assertTrue(np.allclose(nodepos(m1), nodepos(m2)))
-        def cols(m): return np.array([[n.index for n in col.node]
-                                      for col in m.column])
+        def cols(m):
+            maxn = max([col.num_nodes for col in m.column])
+            d = np.full((m.num_columns, maxn), -1, dtype = int)
+            for i, col in enumerate(m.column):
+                d[i, 0: col.num_nodes] = [n.index for n in col.node]
+            return d
         self.assertTrue(np.allclose(cols(m1), cols(m2)))
         def lays(m): return np.array([m.layer[0].top] + \
                          [lay.bottom for lay in m.layer])
@@ -475,6 +504,16 @@ class meshTestCase(unittest.TestCase):
 
     def test_refine(self):
 
+        def cell_types_in_order(m):
+            cell_types = [c.num_nodes for c in m.cell]
+            if m.cell_type_sort < 0:
+                return all([x >= cell_types[i+1]
+                            for i,x in enumerate(cell_types[:-1])])
+            elif m.cell_type_sort > 0:
+                return all([x <= cell_types[i+1]
+                            for i,x in enumerate(cell_types[:-1])])
+            else: return True
+
         dx, dy, dz = [100]*10, [150]*8, [10]*3
 
         m = mesh.mesh(rectangular = (dx, dy, dz))
@@ -486,6 +525,7 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(m.num_columns, 20 * 16)
         self.assertEqual(m.num_nodes, 21 * 17)
         self.assertEqual(len(m.type_columns(3)), 0)
+        self.assertTrue(cell_types_in_order(m))
 
         m = mesh.mesh(rectangular = (dx, dy, dz))
         cols = [col for col in m.column if col.centre[0] < 200]
@@ -495,6 +535,7 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(m.num_columns, 16 * 4 + 8 * 3 + 7 * 8)
         self.assertEqual(m.num_nodes, 5 * 17 + 8 * 9)
         self.assertEqual(len(m.type_columns(3)), 24)
+        self.assertTrue(cell_types_in_order(m))
 
         m = mesh.mesh(rectangular = (dx, dy, dz))
         cols = m.find([(0,0), (400, 500)])
@@ -505,6 +546,7 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(m.num_columns, 12 * 4 + 7 * 3 + 16 + 5 + 8 * 5)
         self.assertEqual(m.num_nodes, 9 * 7 + 5 * 5 + 9 * 6)
         self.assertEqual(len(m.type_columns(3)), 21)
+        self.assertTrue(cell_types_in_order(m))
 
         m = mesh.mesh(rectangular = (dx, dy, dz))
         m.rotate(30)
@@ -513,6 +555,7 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(m.area, original_area)
         self.assertEqual(m.num_columns, 189)
         self.assertEqual(m.num_nodes, 169)
+        self.assertTrue(cell_types_in_order(m))
 
     def test_optimize(self):
 
