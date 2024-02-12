@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "layermesh"
+version = "0.3.3"
+description = "Library for layered computational meshes"
+readme = "README.md"
+authors = [
+  {name = "Adrian Croucher", email = "a.croucher@auckland.ac.nz"}
+]
+license = {file = "LICENSE"}
+requires-python = ">=2.7"
+dependencies = [
+  "numpy",
+  "scipy",
+  "h5py",
+  "meshio",
+  "matplotlib"
+]
+classifiers = [
+  "Programming Language :: Python :: 2",
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
+  "Operating System :: OS Independent"
+]
+
+[project.urls]
+repository = "http://github.com/acroucher/layermesh"
+
+
