@@ -1,8 +1,8 @@
 .. index:: Layermesh; getting started
 
-******************************
-Getting started with Layermesh
-******************************
+***************
+Getting started
+***************
 
 .. toctree::
    :maxdepth: 2

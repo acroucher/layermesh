@@ -1,7 +1,6 @@
 # File: doc/source/requirements.txt
 
 # Defining the exact version will make sure things don't break
-sphinx==6.2.1
-sphinx_rtd_theme==1.3.0
-readthedocs-sphinx-search==0.3.2
+sphinx==7.2.6
+shibuya==2024.1.17
 numpy
