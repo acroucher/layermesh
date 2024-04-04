@@ -251,6 +251,26 @@ class geometryTestCase(unittest.TestCase):
         r = np.dot(A, p) + b
         self.assertTrue(np.allclose(r, np.array([1, 0])))
 
+    def test_line_intersects_rectangle(self):
+        """line_intersects_rectangle()"""
+        r = [np.array([1., 1.]), np.array([5., 3.])]
+        line = [np.array([0., 0.]), np.array([1., 1.])]
+        self.assertTrue(geometry.line_intersects_rectangle(r, line))
+        line = r
+        self.assertTrue(geometry.line_intersects_rectangle(r, line))
+        line = r[::-1]
+        self.assertTrue(geometry.line_intersects_rectangle(r, line))
+        line = [np.array([1., 1.]), np.array([5., 1.])]
+        self.assertTrue(geometry.line_intersects_rectangle(r, line))
+        line = [np.array([3., 1.]), np.array([4., 3.])]
+        self.assertTrue(geometry.line_intersects_rectangle(r, line))
+        line = [np.array([3., 0.]), np.array([4., 6.])]
+        self.assertTrue(geometry.line_intersects_rectangle(r, line))
+        line = [np.array([2., 2.]), np.array([4., 2.5])]
+        self.assertTrue(geometry.line_intersects_rectangle(r, line))
+        line = [np.array([6., 6.]), np.array([8., 0.])]
+        self.assertFalse(geometry.line_intersects_rectangle(r, line))
+
 if __name__ == '__main__':
 
     suite = unittest.TestLoader().loadTestsFromTestCase(geometryTestCase)
