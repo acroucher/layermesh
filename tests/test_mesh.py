@@ -416,7 +416,7 @@ class meshTestCase(unittest.TestCase):
 
         t = m.column_track(([0, 0], [30, 80]))
         self.assertEqual(track_indices(t), [0, 3, 4, 7, 8, 11])
-        self.assertTrue(np.allclose(t[0][1], np.array([0, 00])))
+        self.assertTrue(np.allclose(t[0][1], np.array([0, 0])))
         self.assertTrue(np.allclose(t[-1][2], np.array([30, 80])))
 
         t = m.column_track(([29, 1], [3, 71.5]))
