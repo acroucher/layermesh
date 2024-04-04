@@ -425,6 +425,37 @@ class meshTestCase(unittest.TestCase):
         t = m.column_track(([-2, 3.5], [40, 15]))
         self.assertEqual(track_indices(t), [0, 1, 2])
 
+        t = m.column_track(([12, 25], [18, 35]))
+        self.assertEqual(track_indices(t), [4])
+
+        t = m.column_track(([10, 20], [20, 40]))
+        self.assertEqual(track_indices(t), [4])
+
+        t = m.column_track(([35, -10], [35, 0]))
+        self.assertEqual(t, [])
+
+        # track through grid with a corner removed:
+        m = mesh.mesh(rectangular = ([100]*2, [100]*2, [10]))
+        m.translate([1e7, 1e7, 0])
+        m.delete_column(m.column[0])
+        m.rotate(30)
+        m.setup(indices = True)
+        line = [m.column[0].centre, m.column[1].centre]
+        t = m.column_track(line)
+        self.assertEqual(track_indices(t), [0, 1])
+
+        # M-grid:
+        m = mesh.mesh(rectangular= ([100]*5, [100]*3, [10]))
+        del_cols = [m.column[i] for i in [1,3,6,8]]
+        for col in del_cols: m.delete_column(col)
+        m.setup(indices = True)
+        line = [(0, 50), (500, 50)]
+        t = m.column_track(line)
+        self.assertEqual(track_indices(t), [0, 1, 2])
+        line = line[::-1]
+        t = m.column_track(line)
+        self.assertEqual(track_indices(t), [2, 1, 0])
+
     def test_io(self):
 
         import os
