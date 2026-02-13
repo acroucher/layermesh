@@ -1279,6 +1279,8 @@ class mesh(_layered_object):
         * *linewidth*: the line width of the mesh (default *0.2*).
         * *value*: a tuple, list or array of values to plot over the mesh,
           of length equal to the number of cells in the mesh.
+        * *value_label*: string label for plotted values.
+        * *value_unit*: string for units of plotted values.
         * *xlabel*: label string for the plot *x*-axis (default *'x'*).
         * *ylabel*: label string for the plot *y*-axis (default *'y'*).
 
@@ -1401,6 +1403,8 @@ class mesh(_layered_object):
         * *linewidth*: the line width of the mesh (default *0.2*).
         * *value*: a tuple, list or array of values to plot over the mesh,
           of length equal to the number of cells in the mesh.
+        * *value_label*: string label for plotted values.
+        * *value_unit*: string for units of plotted values.
         * *xlabel*: label string for the plot *x*-axis (default *'x'*).
         * *ylabel*: label string for the plot *y*-axis (default *'z'*).
 
