@@ -156,25 +156,45 @@ class column(_layered_object):
     #: generalisation of the aspect ratio for quadrilateral columns).
     face_length_ratio = property(_get_face_length_ratio)
 
-    def set_layers(self, layers, num_layers):
-        """Sets column layers to be the last *num_layers* layers from the
-        specified list."""
-        istart = len(layers) - num_layers
-        self.layer = layers[istart:]
+    def set_layers(self, layers, num_layers = None,
+                   bottom_layer = None):
+        """Sets column layers to be the *num_layers* layers from the
+        specified list, ending at bottom_layer."""
+        mesh_num_layers = len(layers)
+        if bottom_layer is None: bottom_layer = mesh_num_layers - 1
+        if num_layers is None:
+            num_layers = bottom_layer + 1
+        istart = bottom_layer - num_layers + 1
+        iend = bottom_layer + 1
+        self.layer = layers[istart: iend]
 
-    def set_surface(self, layers, surface = None):
-        """Sets column layers from the given list, according to the specified
-        surface elevation.
+    def set_default_surface(self, layers):
+        """Sets column layer property to include all layers from the specified
+        list above the column bottom."""
+        bottom = self.bottom
+        self.layer = [lay for lay in layers if bottom <= lay.centre]
 
-        If *surface* = *None*, then the column is assigned all layers
-        in the list. Otherwise, it is assigned all layers with centres
+    def set_default_bottom(self, layers):
+        """Sets column layer property to include all layers from the specified
+        list below the column surface."""
+        surface = self.surface
+        self.layer = [lay for lay in layers if lay.centre <= surface]
+
+    def set_surface(self, surface = None):
+        """Sets column layer property to be all of its layers with centres
         below the specified surface elevation.
-
         """
-        if surface is None: self.layer = layers
-        else:
-            self.layer = [lay for lay in layers
+        if surface is not None:
+            self.layer = [lay for lay in self.layer
                           if lay.centre <= surface]
+
+    def set_bottom(self, bottom = None):
+        """Sets column layer property to be all of its layers with centres
+        above the specified bottom elevation.
+        """
+        if bottom is not None:
+            self.layer = [lay for lay in self.layer
+                          if lay.centre >= bottom]
 
     def _get_surface(self):
         return self.layer[0].top
@@ -182,6 +202,18 @@ class column(_layered_object):
     #: (This property is read-only: use **set_surface()** or **set_layers()**
     #: to set the layers in the column.)
     surface = property(_get_surface)
+
+    def _get_bottom(self):
+        return self.layer[-1].bottom
+    #: Bottom elevation of the column, given by the bottom elevation of its lowest layer.
+    #: (This property is read-only: use **set_bottom()** or **set_layers()**
+    #: to set the layers in the column.)
+    bottom = property(_get_bottom)
+
+    def in_layer(self, lay):
+        """Returns *True* if column is in the specified layer, or
+        *False* otherwise."""
+        return self.bottom <= lay.centre <= self.surface
 
     def _find_column(self, pos):
         """Returns self if the column contains the 2-D point pos (tuple, list or
