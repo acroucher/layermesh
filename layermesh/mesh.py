@@ -719,6 +719,8 @@ class mesh(_layered_object):
                 spacings = rectangular[:2]
                 self.set_rectangular_columns(spacings)
             self.surface = kwargs.get('surface', None)
+            self.bottom = kwargs.get('bottom', None)
+
         if self.layer:
             bottom, top = self.layer[-1].bottom, self.layer[0].top
         else:
@@ -952,21 +954,39 @@ class mesh(_layered_object):
         column indices) or list/array of values for all columns."""
 
         if surface is None:
-           for col in self.column: col.set_surface(self.layer)
+            pass
         elif isinstance(surface, dict):
             for col in self.column:
                 if col.index in surface:
-                    col.set_surface(self.layer, surface[col.index])
-                else:
-                    col.set_surface(self.layer)
+                    col.set_surface(surface[col.index])
         elif isinstance(surface, (tuple, list, np.ndarray)):
              if len(surface) == self.num_columns:
                  for col, s in zip(self.column, surface):
-                     col.set_surface(self.layer, s)
+                     col.set_surface(s)
              else:
                  raise Exception('Surface is the wrong size.')
         else:
             raise Exception('Unrecognized surface parameter type.')
+        self.setup()
+
+    def set_bottom(self, bottom):
+        """Sets column layers from bottom dictionary (keyed by
+        column indices) or list/array of values for all columns."""
+
+        if bottom is None:
+            pass
+        elif isinstance(bottom, dict):
+            for col in self.column:
+                if col.index in bottom:
+                    col.set_bottom(bottom[col.index])
+        elif isinstance(bottom, (tuple, list, np.ndarray)):
+             if len(bottom) == self.num_columns:
+                 for col, s in zip(self.column, bottom):
+                     col.set_bottom(s)
+             else:
+                 raise Exception('Bottom is the wrong size.')
+        else:
+            raise Exception('Unrecognized bottom parameter type.')
         self.setup()
 
     def _get_surface(self):
@@ -974,25 +994,23 @@ class mesh(_layered_object):
     #: Array of column surface elevations.
     surface = property(_get_surface, set_surface)
 
-    def set_column_layers(self, num_layers):
-        """Sets column layers from dictionary (keyed by column indices) or
-        list/array of layer counts for each column."""
+    def _get_bottom(self):
+        return np.array([col.bottom for col in self.column])
+    #: Array of column bottom elevations.
+    bottom = property(_get_bottom, set_bottom)
+
+    def set_column_layers(self, num_layers, bottom_layer):
+        """Sets column layers from list/array of layer counts for each
+        column."""
+
+        if bottom_layer is None:
+            bottom_layer = np.full(self.num_columns, self.num_layers - 1,
+                                 dtype = int)
         if num_layers is None:
-           for col in self.column: col.set_surface(self.layer)
-        elif isinstance(num_layers, dict):
-            for col in self.column:
-                if col.index in num_layers:
-                    col.set_layers(self.layer, num_layers[col.index])
-                else:
-                    col.set_layers(self.layer)
-        elif isinstance(num_layers, (list, np.ndarray)):
-             if len(num_layers) == self.num_columns:
-                 for col, n in zip(self.column, num_layers):
-                     col.set_layers(self.layer, n)
-             else:
-                 raise Exception('num_layers is the wrong size.')
-        else:
-            raise Exception('Unrecognized num_layers parameter type.')
+            num_layers = bottom_layer + 1
+
+        for col, n, b in zip(self.column, num_layers, bottom_layer):
+            col.set_layers(self.layer, n, b)
         self.setup()
 
     def write(self, filename):
@@ -1022,14 +1040,18 @@ class mesh(_layered_object):
                     col_group = f.create_group('column')
                     dset = col_group.create_dataset('node', data = col_node_indices)
                     dset.attrs['description'] = 'Indices of nodes in each column'
+                    bottom_layer = np.array([col.layer[-1].index for col in self.column])
                     num_layers = np.array([col.num_layers for col in self.column])
                     dset = col_group.create_dataset('num_layers', data = num_layers)
                     dset.attrs['description'] = 'Number of layers in each column'
+                    if not np.all(bottom_layer == self.num_layers - 1):
+                        dset = col_group.create_dataset('bottom_layer', data = bottom_layer)
+                        dset.attrs['description'] = 'Bottom layer index in each column'
 
     def read(self, filename):
         """Reads mesh from HDF5 file."""
         import h5py
-        num_layers = None
+        num_layers, bottom_layer = None, None
         with h5py.File(filename, 'r') as f:
             if 'cell' in f:
                 cell_group = f['cell']
@@ -1056,7 +1078,9 @@ class mesh(_layered_object):
                                 self.add_column(col)
                             if 'num_layers' in col_group:
                                 num_layers = np.array(col_group['num_layers'])
-        self.set_column_layers(num_layers)
+                            if 'bottom_layer' in col_group:
+                                bottom_layer = np.array(col_group['bottom_layer'])
+        self.set_column_layers(num_layers, bottom_layer)
 
     def _get_meshio_points_cells(self):
 
@@ -1100,6 +1124,11 @@ class mesh(_layered_object):
         return [col.cell[0] for col in self.column]
     #: List of cells at the surface of the mesh.
     surface_cells = property(_get_surface_cells)
+
+    def _get_bottom_cells(self):
+        return [col.cell[-1] for col in self.column]
+    #: List of cells at the bottom of the mesh.
+    bottom_cells = property(_get_bottom_cells)
 
     def column_faces(self, columns = None):
         """Returns a list of the column faces between the specified columns. A
@@ -1594,7 +1623,7 @@ class mesh(_layered_object):
         return spsolve(A, b)
 
     def fit_surface(self, data, columns = None, smoothing = 0.01):
-        """Fits surface elevation data to determine the number of layers in
+        """Fits surface elevation data to determine the topmost layer in
         each column.
 
         The *data* should be in the form of a 3-column array with
@@ -1613,7 +1642,32 @@ class mesh(_layered_object):
         z = self.fit_data_to_columns(data, columns, smoothing)
 
         for col, s in zip(columns, z):
-            col.set_surface(self.layer, s)
+            col.set_default_surface(self.layer)
+            col.set_surface(s)
+        self.setup()
+
+    def fit_bottom(self, data, columns = None, smoothing = 0.01):
+        """Fits bottom elevation data to determine the bottom layer in
+        each column.
+
+        The *data* should be in the form of a 3-column array with
+        x,y,z data in each row. Fitting can be carried out over a
+        subset of the mesh columns by specifying a tuple or list of
+        columns.
+
+        Increasing the smoothing parameter will decrease gradients
+        between columns, and a non-zero value must be used to obtain a
+        solution if any columns contain no data.
+
+        """
+
+        if columns is None: columns = self.column
+
+        z = self.fit_data_to_columns(data, columns, smoothing)
+
+        for col, s in zip(columns, z):
+            col.set_default_bottom(self.layer)
+            col.set_bottom(s)
         self.setup()
 
     def refine(self, columns = None):
