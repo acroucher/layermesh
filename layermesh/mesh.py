@@ -823,8 +823,7 @@ class mesh(_layered_object):
 
     def set_layer_columns(self, lay):
         """Populates the list of columns for a given layer."""
-        lay.column = [col for col in self.column
-                      if self.column_in_layer(col, lay)]
+        lay.column = [col for col in self.column if col.in_layer(lay)]
 
     def setup(self, indices = False):
         """Sets up internal mesh variables, including node, column and layer
@@ -947,11 +946,6 @@ class mesh(_layered_object):
             lay = layer(bottom, top, index)
             self.add_layer(lay)
             index += 1
-
-    def column_in_layer(self, col, lay):
-        """Returns *True* if column is in the specified layer, or
-        *False* otherwise."""
-        return col.num_layers >= self.num_layers - lay.index
 
     def set_surface(self, surface):
         """Sets column layers from surface dictionary (keyed by
