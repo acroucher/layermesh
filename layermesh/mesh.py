@@ -1439,7 +1439,7 @@ class mesh(_layered_object):
             bounds = self.bounds
             r = 0.5 * np.linalg.norm(bounds[1] - bounds[0])
             from math import radians, cos, sin
-            theta = radians(linespec)
+            theta = radians(line)
             d = r * np.array([sin(theta), cos(theta)])
             l = [self.centre - d, self.centre + d]
         else: l = line
