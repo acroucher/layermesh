@@ -606,7 +606,8 @@ class meshTestCase(unittest.TestCase):
 
         # surface and bottom:
         m = mesh.mesh(rectangular = (dx, dy, dz))
-        def f(pos): return -(pos[0] / 150. + pos[0] * pos[1] / 300.)
+        def f(pos): return -(pos[0] / 140. + pos[0] * pos[1] / 300.)
+        colpos = np.array([col.centre for col in m.column])
         z = np.array([f(p) for p in colpos])
         surface = np.hstack((colpos, np.vstack(z)))
         bottom = np.hstack((colpos, np.vstack(z) - 3.))
