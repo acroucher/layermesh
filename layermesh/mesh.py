@@ -58,7 +58,7 @@ class column(_layered_object):
     """Mesh column. On creation, the column's nodes (and optionally index)
     are specified."""
 
-    def __init__(self, node, index = None):
+    def __init__(self, node, index = None, layer = None):
         self.node = node #: List of the node objects in the column.
         self.index = index #: Integer containing the column's index in the mesh.
         self._centroid = None
@@ -66,7 +66,7 @@ class column(_layered_object):
         #: Set containing the neighbouring columns (those that share a face).
         self.neighbour = set()
         #: List of layers in the column.
-        self.layer = None
+        self.layer = layer
         #: List of cells in the column.
         self.cell = None
 
@@ -891,7 +891,8 @@ class mesh(_layered_object):
                     j * nv0 + i + 1]
                 column_nodes = [self.node[ind]
                                 for ind in column_node_indices]
-                col = column(node = column_nodes, index = index)
+                col = column(node = column_nodes, index = index,
+                             layer = self.layer)
                 self.add_column(col)
                 index += 1
 
@@ -1018,7 +1019,8 @@ class mesh(_layered_object):
                                 enumerate(np.array(col_group['node'])):
                                 col_nodes = [self.node[i]
                                              for i in col_node_indices if i >= 0]
-                                col = column(node = col_nodes, index = index)
+                                col = column(node = col_nodes, index = index,
+                                             layer = self.layer)
                                 self.add_column(col)
                             if 'num_layers' in col_group:
                                 num_layers = np.array(col_group['num_layers'])
