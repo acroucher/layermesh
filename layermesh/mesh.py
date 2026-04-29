@@ -687,6 +687,12 @@ class mesh(_layered_object):
                 spacings = rectangular[:2]
                 self.set_rectangular_columns(spacings)
             self.surface = kwargs.get('surface', None)
+        if self.layer:
+            bottom, top = self.layer[-1].bottom, self.layer[0].top
+        else:
+            bottom, top = 0, 0
+        self._complete_layer = layer(bottom, top)
+        self._complete_layer.column = self.column
 
     def __repr__(self):
         return '%d columns, %d layers, %d cells' % \
@@ -1107,6 +1113,7 @@ class mesh(_layered_object):
         for node in self.node: node.pos += shift[:2]
         for col in self.column: col.translate(shift[:2])
         for layer in self.layer: layer.translate(shift)
+        self._complete_layer.translate(shift)
 
     def rotate(self, angle, centre = None):
         """Rotates the mesh horizontally by the specified angle (degrees
@@ -1124,12 +1131,13 @@ class mesh(_layered_object):
                 col._centroid = np.dot(A, col._centroid) + b
         for lay in self.layer:
             lay._quadtree = None
+        self._complete_layer._quadtree = None
 
     def _find_column(self, pos):
         """Returns column containing the 2-D point (tuple, list or array of
         length 2) *pos*."""
         if self.num_layers == 0: return None
-        else: return self.layer[-1]._find_column(pos)
+        else: return self._complete_layer._find_column(pos)
 
     def _find_columns(self, polygon):
         """Returns a list of columns with centroids inside the polygon
@@ -1137,7 +1145,7 @@ class mesh(_layered_object):
         array of length 2).
         """
         if self.num_layers == 0: return []
-        else: return self.layer[-1]._find_columns(polygon)
+        else: return self._complete_layer._find_columns(polygon)
 
     def _find_cell(self, pos):
         """Returns the cell containing the 3-D point *pos* (list, tuple or
