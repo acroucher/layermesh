@@ -138,6 +138,53 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(m.cell[7].num_neighbours, 5)
         self.assertEqual(m.cell[-1].num_neighbours, 3)
 
+    def test_bottom(self):
+
+        dx = [10.]*3; dy = [12.] * 3
+        dz = [1., 2., 3.]
+
+        bottom = {4: -3}
+        m = mesh.mesh(rectangular = (dx, dy, dz), bottom = bottom)
+        self.assertEqual(m.num_cells, 26)
+        self.assertEqual([col.num_cells for col in m.column],
+                         [3, 3, 3, 3, 2, 3, 3, 3, 3])
+        self.assertEqual([lay.num_cells for lay in m.layer],
+                         [9, 9, 8])
+        self.assertEqual(m.volume, 6120)
+        self.assertEqual([c.index for c in m.surface_cells],
+                         list(range(9)))
+        self.assertEqual([c.index for c in m.bottom_cells],
+                         [18, 19, 20, 21, 13, 22, 23, 24, 25])
+
+        bottom = [-3] * 9
+        m = mesh.mesh(rectangular = (dx, dy, dz), bottom = bottom)
+        self.assertEqual(m.num_cells, 18)
+        self.assertEqual([col.num_cells for col in m.column], [2] * 9)
+        self.assertEqual([lay.num_cells for lay in m.layer], [9, 9, 0])
+        self.assertEqual(m.volume, 3240)
+        self.assertEqual([c.index for c in m.surface_cells], list(range(9)))
+        self.assertEqual([c.index for c in m.bottom_cells], list(range(9, 18)))
+
+        bottom = [-1, -3, -6] * 3
+        m = mesh.mesh(rectangular = (dx, dy, dz), bottom = bottom)
+        self.assertEqual([col.num_cells for col in m.column], [1, 2, 3] * 3)
+        self.assertEqual([lay.num_cells for lay in m.layer], [9, 6, 3])
+        self.assertEqual(m.volume, 3600)
+        self.assertEqual([c.index for c in m.bottom_cells],
+                         [0, 9, 15, 3, 11, 16, 6, 13, 17])
+
+        surface = {2: -1, 5:-1, 8:-1}
+        bottom = [-1, -3, -6] * 3
+        m = mesh.mesh(rectangular = (dx, dy, dz),
+                      surface = surface, bottom = bottom)
+        self.assertEqual([col.num_cells for col in m.column], [1, 2, 2] * 3)
+        self.assertEqual([lay.num_cells for lay in m.layer], [6, 6, 3])
+        self.assertEqual(m.volume, 3240)
+        self.assertEqual([c.index for c in m.surface_cells],
+                         [0, 1, 7, 2, 3, 9, 4, 5, 11])
+        self.assertEqual([c.index for c in m.bottom_cells],
+                         [0, 6, 12, 2, 8, 13, 4, 10, 14])
+
     def test_translate(self):
 
         dx = [10, 20, 30]; dy = [20, 15, 10]
@@ -193,6 +240,14 @@ class meshTestCase(unittest.TestCase):
         points, cells = m.meshio_points_cells
         self.assertEqual(len(points), 14 * 4)
         self.assertEqual(len(cells['hexahedron']), 21)
+
+        surface = {2: -1, 5:-1, 8:-1}
+        bottom = [-1, -3, -6] * 3
+        m = mesh.mesh(rectangular = (dx, dy, dz),
+                      surface = surface, bottom = bottom)
+        points, cells = m.meshio_points_cells
+        self.assertEqual(len(points), 48)
+        self.assertEqual(len(cells['hexahedron']), 15)
 
     def test_find(self):
 
@@ -389,6 +444,20 @@ class meshTestCase(unittest.TestCase):
         c = m.find([8, -8, -10], indices = True)
         self.assertEqual(c, 3)
 
+        # surface and bottom:
+        dx = [10.]*3; dy = [12.] * 3; dz = [1., 2., 3.]
+        surface = {2: -1, 5:-1, 8:-1}
+        bottom = [-1, -3, -6] * 3
+        m = mesh.mesh(rectangular = (dx, dy, dz),
+                      surface = surface, bottom = bottom)
+
+        lay = m.find(-0.5, indices = True)
+        self.assertEqual(0, lay)
+        c = m.find([5, 8], indices = True)
+        self.assertEqual(0, c)
+        c = m.find([25, 14, -5], indices = True)
+        self.assertEqual(c, 13)
+
     def test_column_track(self):
 
         dx = [10] * 3; dy = [20] * 4
@@ -462,7 +531,9 @@ class meshTestCase(unittest.TestCase):
         dx = [10.]*3; dy = [12.] * 3
         dz = [1., 2., 3.]
         s = [0, 0, -1.5, -1.8, -2.1, -2.8, -3, -1, 0]
-        m1 = mesh.mesh(rectangular = (dx, dy, dz), surface = s)
+        b = [-3, -3, -6, -3, -6, -6, -6, -6, -6]
+        m1 = mesh.mesh(rectangular = (dx, dy, dz),
+                       surface = s, bottom = b)
         refine_cols = m1.find([(0, 0), (10, 10)])
         m1.refine(refine_cols)
         filename = 'mesh.h5'
@@ -532,6 +603,16 @@ class meshTestCase(unittest.TestCase):
                               z2 if col.centre[0] < x else z]
                              for col in m.column])
         self.assertTrue(np.allclose(expected[:, 2], m.surface))
+
+        # surface and bottom:
+        m = mesh.mesh(rectangular = (dx, dy, dz))
+        def f(pos): return -(pos[0] / 150. + pos[0] * pos[1] / 300.)
+        z = np.array([f(p) for p in colpos])
+        surface = np.hstack((colpos, np.vstack(z)))
+        bottom = surface - 3.
+        m.fit_surface(surface)
+        m.fit_bottom(bottom)
+        self.assertEqual(21, m.num_cells)
 
     def test_refine(self):
 
