@@ -609,7 +609,7 @@ class meshTestCase(unittest.TestCase):
         def f(pos): return -(pos[0] / 150. + pos[0] * pos[1] / 300.)
         z = np.array([f(p) for p in colpos])
         surface = np.hstack((colpos, np.vstack(z)))
-        bottom = surface - 3.
+        bottom = np.hstack((colpos, np.vstack(z) - 3.))
         m.fit_surface(surface)
         m.fit_bottom(bottom)
         self.assertEqual(21, m.num_cells)
