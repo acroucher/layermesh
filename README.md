@@ -4,7 +4,7 @@
 
 Layermesh is a Python library for creating and manipulating computational meshes with a layer/column structure, i.e. a (possibly unstructured) 2-D mesh projected down through a series of layers of constant thickness.
 
-The uppermost layers of the mesh may be incomplete (i.e. do not contain cells for all columns), so that an irregular top surface can be used to represent e.g. topography.
+The uppermost layers of the mesh may be incomplete (i.e. do not contain cells for all columns), so that an irregular top surface can be used to represent e.g. topography. Similarly, the bottom layers may also be incomplete.
 
 The Layermesh library can be used to carry out a variety of actions on such meshes, including:
 
