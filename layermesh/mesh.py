@@ -1220,6 +1220,25 @@ class mesh(_layered_object):
         nodes."""
         return [col for col in self.column if col.num_nodes == num_nodes]
 
+    def faces(self, cells = None):
+        """Returns a list of the faces between the specified cells. A
+        list of the cells may be optionally specified, otherwise all
+        cells will be included.
+        """
+        if cells is None: cells = self.cell
+        cell_dict = {c.index: c for c in cells}
+        face_keys = set()
+        for c in cells:
+            for nbr in c.neighbour:
+                if nbr.index in cell_dict:
+                    face_keys.add(frozenset([c.index, nbr.index]))
+        faces = []
+        for key in face_keys:
+            cells = [self.cell[c] for c in key]
+            f = face(cells)
+            faces.append(f)
+        return faces
+
     def translate(self, shift):
         """Translates the mesh by the specified 3-D shift vector (tuple, list
         or array of length 3)."""
