@@ -22,8 +22,21 @@ class meshTestCase(unittest.TestCase):
         self.assertEqual(m.num_columns, 9)
         self.assertEqual(m.num_layers, 3)
         self.assertEqual(m.num_cells, 27)
-        faces = m.column_faces()
-        self.assertEqual(len(faces), 12)
+
+        colfaces = m.column_faces()
+        self.assertEqual(len(colfaces), 12)
+        cf = mesh.column_face((m.column[0], m.column[1]))
+        self.assertEqual(cf.length, 12)
+        self.assertTrue(np.allclose(cf.centroid, np.array([10., 6.])))
+
+        faces = m.faces()
+        self.assertEqual(len(faces), 3*3*2*3)
+        f = mesh.face((m.cell[0], m.cell[1]))
+        self.assertTrue(f.vertical)
+        self.assertFalse(f.horizontal)
+        self.assertEqual(f.area, 12)
+        self.assertTrue(np.allclose(f.centroid, np.array([10., 6., -0.5])))
+
         self.assertEqual(len(m.type_columns(4)), 9)
         self.assertEqual(m.type_columns(3), [])
 
