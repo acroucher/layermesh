@@ -58,3 +58,12 @@ within a rectangle with bottom left coordinates at the origin and top
 right coordinates (5000, 5000). (For more information on how to find
 particular mesh columns or other mesh components using the ``find()``
 method, see :ref:`searching`.)
+
+Fitting bottom elevation data
+=============================
+
+In a similar way, the bottom layers of the mesh may also be incomplete
+if a bottom surface that is not flat is required. The bottom of the
+mesh can be specified by fitting scattered (*x*, *y*, *z*) data, using
+the ``mesh`` ``fit_bottom()`` method. This works in the same way as
+the ``mesh`` ``fit_surface()`` method.

@@ -52,8 +52,9 @@ columns may have different numbers of layers, as the upper layers in
 the mesh may be incomplete, to represent e.g. surface topography.
 
 Columns also have geometric properties derived from their node
-positions, e.g. ``area`` and ``centroid``, and a ``surface`` property,
-which is the elevation of the top of the column.
+positions, e.g. ``area`` and ``centroid``, and ``surface`` and
+``bottom`` properties, which are the elevations of the top and bottom
+of the column.
 
 .. index:: classes; layer
 
