@@ -36,6 +36,11 @@ class meshTestCase(unittest.TestCase):
         self.assertFalse(f.horizontal)
         self.assertEqual(f.area, 12)
         self.assertTrue(np.allclose(f.centroid, np.array([10., 6., -0.5])))
+        f = mesh.face((m.cell[0], m.cell[9]))
+        self.assertTrue(f.horizontal)
+        self.assertFalse(f.vertical)
+        self.assertEqual(f.area, 120)
+        self.assertTrue(np.allclose(f.centroid, np.array([5., 6., -1.])))
 
         self.assertEqual(len(m.type_columns(4)), 9)
         self.assertEqual(m.type_columns(3), [])
