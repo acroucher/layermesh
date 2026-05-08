@@ -337,6 +337,17 @@ class column_face(object):
     def __repr__(self):
         return str(self.column[0].index) + ':' + str(self.column[1].index)
 
+    def _get_length(self):
+        n = self.node[1].pos - self.node[0].pos
+        return np.linalg.norm(n)
+    #: Length of the column face.
+    length = property(_get_length)
+
+    def _get_centroid(self):
+        return 0.5 * (self.node[1].pos + self.node[0].pos)
+    #: Centroid of the column face.
+    centroid = property(_get_centroid)
+
     def _get_angle_cosine(self):
         n = self.node[1].pos - self.node[0].pos
         n = n / np.linalg.norm(n)
