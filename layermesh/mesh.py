@@ -679,6 +679,51 @@ class cell(object):
         if result is None: return None
         else: return result.index if indices else result
 
+class face(object):
+    """Face between two cells. On creation, the two cells on either side
+    of the face are specified."""
+
+    def __init__(self, cell):
+        #: List or tuple of cell objects on either side of the face.
+        self.cell = cell
+
+    def __repr__(self):
+        return str(self.cell[0].index) + ':' + str(self.cell[1].index)
+
+    def _get_vertical(self):
+        return self.cell[0].layer is self.cell[1].layer
+    #: True if both cells are in the same layer.
+    vertical = property(_get_vertical)
+
+    def _get_horizontal(self):
+        return self.cell[0].column is self.cell[1].column
+    #: True if both cells are in the same column.
+    horizontal = property(_get_horizontal)
+
+    def _get_area(self):
+        if self.horizontal:
+            return self.cell[0].column.area
+        else:
+            col_face = column_face([self.cell[0].column, self.cell[1].column])
+            return self.cell[0].layer.thickness * col_face.length
+    #: Area of the face.
+    area = property(_get_area)
+
+    def _get_centroid(self):
+        if self.horizontal:
+            if self.cell[0].above is self.cell[1]:
+                z = self.cell[0].layer.top
+            else:
+                z = self.cell[0].layer.bottom
+            return np.concatenate((self.cell[0].column.centroid,
+                                   np.full(1, z)))
+        else:
+            col_face = column_face([self.cell[0].column, self.cell[1].column])
+            return np.concatenate((col_face.centroid,
+                                   np.full(1, self.cell[0].layer.centre)))
+    #: Centroid of the face.
+    centroid = property(_get_centroid)
+
 class mesh(_layered_object):
     """A mesh can be created either by reading it from a file, or via
         other parameters.
