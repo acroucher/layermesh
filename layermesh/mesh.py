@@ -334,6 +334,9 @@ class column_face(object):
         #: List of node objects at either end of the face.
         self.node = list(set(column[0].node) & set(column[1].node))
 
+    def __repr__(self):
+        return str(self.column[0].index) + ':' + str(self.column[1].index)
+
     def _get_angle_cosine(self):
         n = self.node[1].pos - self.node[0].pos
         n = n / np.linalg.norm(n)
