@@ -378,7 +378,8 @@ class layer(object):
         self._quadtree = None
 
     def __repr__(self):
-        return str(self.index)
+        if self.index is None: return str(self.bottom) + ': ' + str(self.top)
+        else: return str(self.index)
 
     def _get_num_columns(self): return len(self.column)
     #: Number of columns in the layer.
