@@ -1402,8 +1402,11 @@ class mesh(_layered_object):
         return track
 
     def layer_plot(self, lay = -1, **kwargs):
-        """Creates a 2-D Matplotlib plot of the mesh at a specified layer. The
-        *lay* parameter can be either a layer object or a layer index.
+        """Creates a 2-D Matplotlib plot of the mesh at a specified layer.
+
+        The *lay* parameter can be a layer object, a layer index or a
+        string with value 'surface' or 'bottom', which gives a plot of
+        cells at the mesh surface or bottom.
 
         Other optional parameters:
 
@@ -1436,6 +1439,8 @@ class mesh(_layered_object):
         if 'axes' in kwargs: ax = kwargs['axes']
         else: fig, ax = plt.subplots()
 
+        surface_type = None
+
         if 'elevation' in kwargs:
             z = kwargs['elevation']
             lay = self.find(z)
@@ -1450,12 +1455,26 @@ class mesh(_layered_object):
                     lay = self.layer[lay]
                 except:
                     raise Exception('Unknown layer in layer_plot()')
+            elif isinstance(lay, str):
+                if lay in ['surface', 'bottom']:
+                    surface_type = lay
+                    lay = self._complete_layer
+                else:
+                    raise Exception('Unknown layer in layer_plot()')
 
         labels = kwargs.get('label', None)
         label_fmt = kwargs.get('label_format', '%g')
         label_colour = kwargs.get('label_colour', 'black')
         verts = []
-        for c in lay.cell:
+
+        if surface_type is None:
+            cells = lay.cell
+        elif surface_type == 'surface':
+            cells = self.surface_cells
+        elif surface_type == 'bottom':
+            cells = self.bottom_cells
+
+        for c in cells:
             col = c.column
             poslist = [tuple([p for p in n.pos])
                                 for n in col.node]
@@ -1484,12 +1503,12 @@ class mesh(_layered_object):
             vals = kwargs['value']
             if len(vals) >= self.num_cells:
                 vals = np.array(kwargs['value'])
-                indices = [c.index for c in lay.cell]
+                indices = [c.index for c in cells]
                 layer_vals = vals[indices]
                 polys.set_array(layer_vals)
                 self._plot_colourbar(ax, polys, kwargs)
                 if labels == 'value':
-                    for c in lay.cell:
+                    for c in cells:
                         col = c.column
                         col_label = label_fmt % vals[c.index]
                         ax.text(col.centre[0], col.centre[1], col_label,
