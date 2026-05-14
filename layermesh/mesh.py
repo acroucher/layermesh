@@ -1559,6 +1559,9 @@ class mesh(_layered_object):
         * *aspect*: the aspect ratio of the axes (default *'auto'*).
         * *axes*: a Matplotlib axes object on which to draw the plot. If not
           specified, then a new axes object will be created internally.
+        * *colourbar_limits*: a tuple or list containing the lower and upper
+          limits of the colourbar range for shading the plot according to the
+          *value* array (otherwise this will be auto-scaled)
         * *colourmap*: a Matplotlib colourmap object for shading the plot
           according to the *value* array (default *None*).
         * *label*: a string (or *None*, the default) specifying what labels\
@@ -1651,6 +1654,8 @@ class mesh(_layered_object):
                                                facecolors = [],
                                                edgecolors = linecolour,
                                                cmap = colourmap)
+            if 'colourbar_limits' in kwargs:
+                polys.norm.vmin, polys.norm.vmax = tuple(kwargs['colourbar_limits'])
             ax.add_collection(polys)
 
             if 'value' in kwargs:
