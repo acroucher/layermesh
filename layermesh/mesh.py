@@ -156,6 +156,15 @@ class column(_layered_object):
     #: generalisation of the aspect ratio for quadrilateral columns).
     face_length_ratio = property(_get_face_length_ratio)
 
+    def _get_clockwise(self):
+        v1, v2 = np.zeros(3), np.zeros(3)
+        v1[:-1] = self.node[1].pos - self.node[0].pos
+        v2[:-1] = self.node[-1].pos - self.node[0].pos
+        v3 = np.cross(v1, v2)
+        return v3[-1] < 0
+    #: True if column node ordering is clockwise.
+    clockwise = property(_get_clockwise)
+
     def set_layers(self, layers, num_layers = None,
                    bottom_layer = None):
         """Sets column layers to be the *num_layers* layers from the

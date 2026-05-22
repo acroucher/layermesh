@@ -4,6 +4,15 @@ from layermesh import mesh
 
 class meshTestCase(unittest.TestCase):
 
+    def test_column_clockwise(self):
+
+        pos = np.array([[0, 0.], [0, 5.], [4., 4.], [3., 0]])
+        nodes = [mesh.node(p) for p in pos]
+        col = mesh.column(nodes)
+        self.assertTrue(col.clockwise)
+        col = mesh.column(nodes[::-1])
+        self.assertFalse(col.clockwise)
+
     def test_null(self):
 
         m = mesh.mesh()
