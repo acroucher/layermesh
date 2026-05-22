@@ -1161,9 +1161,10 @@ class mesh(_layered_object):
 
         for c in self.cell:
             elt = []
-            for iz, z in enumerate([c.layer.top, c.layer.bottom]):
-                ilayer = c.layer.index + iz
-                for n in c.column.node:
+            nodes = c.column.node[::-1] if c.column.clockwise else c.column.node
+            for iz, z in enumerate([c.layer.bottom, c.layer.top]):
+                ilayer = c.layer.index + 1 - iz
+                for n in nodes:
                     k = (ilayer, n.index)
                     if k not in node_index: # create point:
                         pos = np.concatenate((n.pos, np.array([z])))
