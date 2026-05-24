@@ -12,7 +12,7 @@ The Layermesh library can be used to carry out a variety of actions on such mesh
 * loading and saving from [HDF5](https://www.hdfgroup.org/solutions/hdf5/) files
 * exporting to a variety of 3-D mesh formats (via the
   [meshio](https://pypi.org/project/meshio/) library)
-* fitting surface elevation data
+* fitting surface and bottom elevation data
 * local refinement of the horizontal mesh
 * optimization to improve horizontal mesh quality
 * mesh searching, to locate particular cells, columns or layers
