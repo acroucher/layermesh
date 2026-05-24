@@ -38,8 +38,10 @@ Layermesh HDF5 files have a simple structure with four groups:
   ``node`` list
 * ``column``: an rank-2 integer ``node`` dataset containing the index
   of each node in the column, for each column in the mesh ``column``
-  list (columns with fewer nodes padded out with -1 values) ; and also
-  a rank-1 integer ``num_layers`` dataset containing the number of
-  layers for each column
+  list (columns with fewer nodes padded out with -1 values) ; a rank-1
+  integer ``num_layers`` dataset containing the number of layers for
+  each column; and also an optional rank-1 integer ``bottom_layer``
+  dataset containing the index of the bottom layer for each column
+  (assumed -1 if not present)
 
 
